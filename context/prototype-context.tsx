@@ -24,6 +24,8 @@ type PrototypeContextValue = {
   addInterest: (topic: string) => void;
   removeInterest: (topic: string) => void;
   notifications: AppNotification[];
+  appSessionReady: boolean;
+  markAppSessionReady: () => void;
 };
 
 const PrototypeContext = createContext<PrototypeContextValue | null>(null);
@@ -33,6 +35,11 @@ export function PrototypeProvider({ children }: { children: ReactNode }) {
   const [rsvpEvents, setRsvpEvents] = useState<Set<string>>(new Set());
   const [interests, setInterests] = useState<string[]>(DEFAULT_INTERESTS);
   const [notificationRead, setNotificationRead] = useState<Set<string>>(new Set());
+  const [appSessionReady, setAppSessionReady] = useState(false);
+
+  const markAppSessionReady = useCallback(() => {
+    setAppSessionReady(true);
+  }, []);
 
   const toggleBookmark = useCallback((key: string) => {
     setBookmarks((prev) => {
@@ -102,6 +109,8 @@ export function PrototypeProvider({ children }: { children: ReactNode }) {
       addInterest,
       removeInterest,
       notifications: initialNotifications,
+      appSessionReady,
+      markAppSessionReady,
     }),
     [
       bookmarks,
@@ -117,6 +126,8 @@ export function PrototypeProvider({ children }: { children: ReactNode }) {
       markAllNotificationsRead,
       addInterest,
       removeInterest,
+      appSessionReady,
+      markAppSessionReady,
     ]
   );
 

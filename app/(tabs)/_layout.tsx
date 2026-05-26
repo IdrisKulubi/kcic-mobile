@@ -1,12 +1,15 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
+import { View } from 'react-native';
 
+import { AskKcicFab } from '@/components/kcic/ask-kcic-fab';
 import { HapticTab } from '@/components/haptic-tab';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { palette } from '@/components/kcic/ui';
 
 export default function TabLayout() {
   return (
+    <View style={{ flex: 1 }}>
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: palette.lime,
@@ -62,5 +65,7 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
+    <AskKcicFab />
+    </View>
   );
 }

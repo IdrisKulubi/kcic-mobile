@@ -23,6 +23,10 @@ export function openPodcastEpisode(episodeId: string) {
   });
 }
 
+export function openAskKcic() {
+  router.push('/ask');
+}
+
 export function openNotificationLink(linkType: string, linkId: string) {
   if (linkType === 'podcast') {
     openPodcastEpisode(linkId);
