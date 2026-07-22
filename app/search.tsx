@@ -136,7 +136,7 @@ export default function SearchScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}>
           {trimmedQuery.length > 0 && results.length === 0 ? (
-            <Text style={styles.empty}>No results for "{trimmedQuery}"</Text>
+            <Text style={styles.empty}>No results for &quot;{trimmedQuery}&quot;</Text>
           ) : null}
 
           {grouped.map(([section, items]) => (

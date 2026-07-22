@@ -16,6 +16,7 @@ import {
   TopBar,
   palette,
 } from '@/components/kcic/ui';
+import { useAuth } from '@/context/auth-context';
 import { usePrototype } from '@/context/prototype-context';
 import { bookmarkKey, events, savedResources } from '@/data/kcic';
 
@@ -27,6 +28,7 @@ const SETTING_SLUGS: Record<string, string> = {
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { user, signOut } = useAuth();
   const { hasUnreadNotifications, interests, removeInterest, addInterest, toggleBookmark, isBookmarked } =
     usePrototype();
 
@@ -48,16 +50,21 @@ export default function ProfileScreen() {
             <MaterialIcons name="edit" size={16} color={palette.limeDark} />
           </View>
         </Pressable>
-        <Text style={styles.name}>Idris Kulubi</Text>
-        <Text style={styles.role}>AgriTech Innovator & Sustainability Consultant</Text>
+        <Text style={styles.name}>{user?.name ?? 'KCIC Member'}</Text>
+        <Text style={styles.role}>
+          {user?.role ?? 'Climate Innovation Member'}
+          {user?.organization ? `, ${user.organization}` : ''}
+        </Text>
         <View style={styles.badgeRow}>
           <View style={styles.infoBadge}>
             <MaterialIcons name="location-on" size={13} color={palette.slate} />
-            <Text style={styles.infoBadgeText}>Nairobi, Kenya</Text>
+            <Text style={styles.infoBadgeText}>{user?.location ?? 'Nairobi, Kenya'}</Text>
           </View>
           <View style={styles.infoBadge}>
             <MaterialIcons name="calendar-today" size={13} color={palette.slate} />
-            <Text style={styles.infoBadgeText}>Joined Mar 2023</Text>
+            <Text style={styles.infoBadgeText}>
+              {user?.createdAt ? `Joined ${new Date(user.createdAt).getFullYear()}` : 'Prototype session'}
+            </Text>
           </View>
         </View>
         <PrimaryButton label="Edit Profile" onPress={showEditProfile} />
@@ -149,6 +156,13 @@ export default function ProfileScreen() {
             <MaterialIcons name="chevron-right" size={24} color="#A3B0A0" />
           </Pressable>
         ))}
+        <Pressable style={styles.signOutRow} onPress={signOut}>
+          <MaterialIcons name="logout" size={22} color={palette.danger} />
+          <View style={styles.resourceText}>
+            <Text style={styles.signOutTitle}>Sign Out</Text>
+            <Text style={styles.resourceDetail}>Clear this device session</Text>
+          </View>
+        </Pressable>
       </Card>
     </AppScreen>
   );
@@ -289,5 +303,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#F3F6FF',
+  },
+  signOutRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#EEF2EC',
+  },
+  signOutTitle: {
+    color: palette.danger,
+    fontSize: 14,
+    fontWeight: '900',
   },
 });

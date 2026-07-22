@@ -1,12 +1,16 @@
 import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import * as WebBrowser from 'expo-web-browser';
 import { useCallback, useState } from 'react';
 import 'react-native-reanimated';
 
 import { IntroSplash } from '@/components/kcic/intro-splash';
+import { AuthProvider } from '@/context/auth-context';
 import { PrototypeProvider, usePrototype } from '@/context/prototype-context';
 import { defaultStackScreenOptions, modalStackScreenOptions } from '@/lib/stack-options';
+
+WebBrowser.maybeCompleteAuthSession();
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -24,6 +28,7 @@ function RootNavigation() {
   return (
     <ThemeProvider value={DefaultTheme}>
       <Stack screenOptions={defaultStackScreenOptions}>
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
           name="search"
@@ -57,7 +62,9 @@ function RootNavigation() {
 export default function RootLayout() {
   return (
     <PrototypeProvider>
-      <RootNavigation />
+      <AuthProvider>
+        <RootNavigation />
+      </AuthProvider>
     </PrototypeProvider>
   );
 }
