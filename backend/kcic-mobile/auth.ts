@@ -2,11 +2,10 @@ import { expo } from "@better-auth/expo"
 import { betterAuth } from "better-auth"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import { twoFactor, emailOTP } from "better-auth/plugins"
-import { Resend } from "resend"
 import db from "./db/drizzle"
 import * as schema from "./db/schema"
 import { user } from "./db/schema"
-import { renderOtpEmailHtml } from "./src/lib/email/render-otp-email"
+import { sendOtpEmail } from "./src/lib/email/send-otp-email"
 import { eq } from "drizzle-orm"
 import { WEB_CORS_ORIGINS } from "./src/lib/web-cors-origins"
 
@@ -66,10 +65,6 @@ const appleAudiences = Array.from(
   )
 )
 
-const resend = new Resend(process.env.RESEND_API_KEY ?? "re_placeholder")
-const resendFromEmail =
-  process.env.RESEND_FROM_EMAIL?.trim().toLowerCase() || "onboarding@resend.dev"
-
 async function getUserNameByEmail(email: string) {
   const rows = await db
     .select({ name: user.name })
@@ -78,30 +73,6 @@ async function getUserNameByEmail(email: string) {
     .limit(1)
 
   return rows[0]?.name
-}
-
-async function sendEmailOrThrow(input: {
-  to: string
-  subject: string
-  html: string
-}) {
-  const result = await resend.emails.send({
-    from: resendFromEmail,
-    to: input.to,
-    subject: input.subject,
-    html: input.html,
-  })
-
-  if (result.error) {
-    console.error("[RESEND] Email send failed:", result.error)
-
-    const fromDomain = resendFromEmail.split("@")[1] || resendFromEmail
-    throw new Error(
-      `Failed to send email from ${resendFromEmail}. Check that the sender/domain is verified in Resend (domain: ${fromDomain}).`
-    )
-  }
-
-  return result
 }
 
 export const auth = betterAuth({
@@ -181,27 +152,13 @@ export const auth = betterAuth({
       overrideDefaultEmailVerification: true,
       async sendVerificationOTP({ email, otp, type }) {
         try {
-          const subject =
-            type === "forget-password"
-              ? "Reset your KCIC Climate Hub password"
-              : type === "sign-in"
-                ? "Your KCIC Climate Hub sign-in code"
-                : type === "change-email"
-                  ? "Confirm your new email address"
-                  : "Verify your email address"
-
           const name = await getUserNameByEmail(email)
-          const emailHtml = await renderOtpEmailHtml({
+
+          await sendOtpEmail({
+            to: email,
             otp,
             purpose: type,
             name,
-            email,
-          })
-
-          await sendEmailOrThrow({
-            to: email,
-            subject,
-            html: emailHtml,
           })
         } catch (error) {
           console.error("[EMAIL OTP] Error sending email:", error)
@@ -219,16 +176,11 @@ export const auth = betterAuth({
           user: { email: string; name: string }
           otp: string
         }) {
-          const emailHtml = await renderOtpEmailHtml({
+          await sendOtpEmail({
+            to: user.email,
             otp,
             purpose: "two-factor",
             name: user.name,
-            email: user.email,
-          })
-          await sendEmailOrThrow({
-            to: user.email,
-            subject: "Your KCIC Climate Hub security code",
-            html: emailHtml,
           })
         },
       },

@@ -67,6 +67,7 @@ export default function AuthScreen() {
 
   const normalizedEmail = email.trim().toLowerCase();
   const isSignIn = mode === 'sign-in';
+  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail);
 
   const switchMode = (nextMode: AuthMode) => {
     setMode(nextMode);
@@ -95,6 +96,10 @@ export default function AuthScreen() {
   const handleEmailAuth = async () => {
     if (!normalizedEmail || !password) {
       toast.warning('Details required', 'Enter your email and password to continue.');
+      return;
+    }
+    if (!isValidEmail) {
+      toast.warning('Invalid email', 'Enter a valid email address to continue.');
       return;
     }
     if (password.length < 8) {
@@ -375,7 +380,13 @@ export default function AuthScreen() {
                       </Pressable>
                     )}
 
-                    <Pressable onPress={handleEmailAuth} disabled={busy} style={styles.primaryButton}>
+                    <Pressable
+                      onPress={handleEmailAuth}
+                      disabled={busy || (!isSignIn && !agreedToTerms)}
+                      style={[
+                        styles.primaryButton,
+                        !isSignIn && !agreedToTerms ? styles.primaryButtonDisabled : null,
+                      ]}>
                       {busy ? (
                         <ActivityIndicator color={palette.white} />
                       ) : (
@@ -535,6 +546,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 4,
+  },
+  primaryButtonDisabled: {
+    backgroundColor: '#C5D4C8',
+    opacity: 0.7,
   },
   primaryText: {
     color: palette.white,
