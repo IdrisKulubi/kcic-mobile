@@ -31,6 +31,7 @@ import { getAuthErrorToast, throwIfAuthError, type AuthAction } from '@/lib/auth
 import { getStoredAuth } from '@/lib/auth-helpers';
 import { fonts } from '@/lib/typography';
 import { toast } from '@/lib/toast';
+import { isValidEmail } from '@/lib/validation';
 
 type AuthMode = 'sign-in' | 'sign-up';
 type AuthStep = 'form' | 'verify';
@@ -67,7 +68,7 @@ export default function AuthScreen() {
 
   const normalizedEmail = email.trim().toLowerCase();
   const isSignIn = mode === 'sign-in';
-  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail);
+  const emailIsValid = isValidEmail(normalizedEmail);
 
   const switchMode = (nextMode: AuthMode) => {
     setMode(nextMode);
@@ -98,7 +99,7 @@ export default function AuthScreen() {
       toast.warning('Details required', 'Enter your email and password to continue.');
       return;
     }
-    if (!isValidEmail) {
+    if (!emailIsValid) {
       toast.warning('Invalid email', 'Enter a valid email address to continue.');
       return;
     }

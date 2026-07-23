@@ -5,4 +5,4 @@ export type OtpPurpose =
   | "email-verification"
   | "two-factor"
 
-export type EmailTemplate = "otp" | "welcome"
+export type EmailTemplate = "otp" | "welcome" | "password-reset"

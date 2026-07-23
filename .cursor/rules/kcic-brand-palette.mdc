@@ -1,0 +1,28 @@
+---
+description: KCIC canonical brand palette — always use these five colors
+alwaysApply: true
+---
+
+# KCIC Brand Palette
+
+## Canonical colors (only approved brand hues)
+
+| Name | Hex | Use |
+|------|-----|-----|
+| Green | `#80C738` | Primary actions, active states, success |
+| Gray | `#8B8D90` | Secondary text, labels, subdued UI |
+| White | `#FFFFFF` | Surfaces, cards, inverted button text |
+| Blue | `#00ADDD` | Links, info, content taxonomy |
+| Brown | `#E97451` | Warm highlights, featured callouts |
+
+## Rules
+
+- Do **not** use legacy forest (`#006B45`), ink (`#111827`), shell blue (`#F6F8FF`), or other off-palette brand colors.
+- Derive borders, panels, and disabled states from Gray + White only (see `DESIGN.md`).
+- Primary text: darkened Gray (`#4A4B4D`). Danger/error may use standard red outside the five brand hues.
+- Read `DESIGN.md` before UI or email work.
+
+## References
+
+- Mobile: `components/kcic/ui.tsx` → `palette`
+- Email: `backend/kcic-mobile/emails/theme.ts` → `kcicBrandColors`

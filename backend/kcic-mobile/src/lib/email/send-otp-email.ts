@@ -1,4 +1,8 @@
-import { renderOtpEmailHtml, renderWelcomeEmailHtml } from "@/src/lib/email/render"
+import {
+  renderOtpEmailHtml,
+  renderPasswordResetEmailHtml,
+  renderWelcomeEmailHtml,
+} from "@/src/lib/email/render"
 import { sendEmail } from "@/src/lib/email/send-email"
 import type { OtpPurpose } from "@/src/lib/email/types"
 
@@ -43,6 +47,23 @@ export async function sendWelcomeEmail(input: { to: string; name?: string | null
   await sendEmail({
     to: input.to,
     subject: "Welcome to KCIC Climate Hub",
+    html,
+  })
+}
+
+export async function sendPasswordResetEmail(input: {
+  to: string
+  url: string
+  name?: string | null
+}) {
+  const html = await renderPasswordResetEmailHtml({
+    url: input.url,
+    name: input.name,
+  })
+
+  await sendEmail({
+    to: input.to,
+    subject: "Reset your KCIC Climate Hub password",
     html,
   })
 }

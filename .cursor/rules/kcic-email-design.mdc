@@ -1,0 +1,29 @@
+---
+description: KCIC React Email templates — Tailwind theme tokens only
+globs: backend/kcic-mobile/emails/**/*.tsx,backend/kcic-mobile/emails/**/*.ts
+alwaysApply: false
+---
+
+# KCIC Email Design
+
+## Theme
+
+Import from `emails/theme.ts`:
+
+- `kcicBrandColors` — green, gray, white, blue, brown
+- `kcicBoxedTailwindConfig` — Tailwind wrapper config
+- `kcicDerivedColors` — panels, strokes, logo surface (derived neutrals only)
+
+## Rules
+
+- Wrap templates in `KcicEmailLayout` or `Tailwind` + `kcicBoxedTailwindConfig`.
+- Use semantic classes: `text-brand`, `text-accent`, `text-warm`, `text-fg`, `text-fg-2`, `text-fg-3`, `bg-bg`, `bg-bg-2`.
+- **No raw hex** in template `.tsx` files except `theme.ts`.
+- White-led boxed layout. Green primary buttons. Blue social/footer links.
+- Logo via `getLogoDataUri()` from `emails/logo.ts`.
+
+## Preview
+
+```bash
+cd backend/kcic-mobile && npm run email:dev
+```

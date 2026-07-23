@@ -1,15 +1,8 @@
 "use server"
 
-import { sendOtpEmail, sendWelcomeEmail } from "@/src/lib/email/send-otp-email"
+import { sendOtpEmail, sendPasswordResetEmail, sendWelcomeEmail } from "@/src/lib/email/send-otp-email"
 import type { EmailTemplate, OtpPurpose } from "@/src/lib/email/types"
-
-function assertEmail(value: string) {
-  const email = value.trim().toLowerCase()
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    throw new Error("Enter a valid email address.")
-  }
-  return email
-}
+import { assertEmail } from "@/src/lib/email/validate-email"
 
 function assertOtp(value: string) {
   const otp = value.trim()
@@ -63,6 +56,13 @@ export async function sendEmailAction(input: {
     case "welcome": {
       const name = typeof input.props?.name === "string" ? input.props.name : null
       await sendWelcomeEmail({ to, name })
+      break
+    }
+    case "password-reset": {
+      const url = String(input.props?.url ?? "").trim()
+      const name = typeof input.props?.name === "string" ? input.props.name : null
+      if (!url) throw new Error("Password reset URL is required.")
+      await sendPasswordResetEmail({ to, url, name })
       break
     }
     default:

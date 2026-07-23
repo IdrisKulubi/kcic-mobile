@@ -15,17 +15,23 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export const palette = {
-  lime: '#80C738',
-  limeDark: '#5CAB17',
-  forest: '#006B45',
+  green: '#80C738',
+  gray: '#8B8D90',
+  white: '#FFFFFF',
   blue: '#00ADDD',
-  ink: '#111827',
-  slate: '#5E6875',
+  brown: '#E97451',
+  /** @deprecated Use palette.green */
+  lime: '#80C738',
+  /** @deprecated Use palette.green */
+  limeDark: '#6BA82E',
+  /** @deprecated Use palette.green */
+  forest: '#80C738',
+  ink: '#4A4B4D',
+  slate: '#8B8D90',
   muted: '#8B8D90',
-  shell: '#F6F8FF',
-  panel: '#EEF4FF',
-  line: '#DDE7D8',
-  white: '#FEFFFC',
+  shell: '#F5F5F6',
+  panel: '#F5F5F6',
+  line: '#E8E8E9',
   danger: '#C92A2A',
   cream: '#FFF9E6',
 };

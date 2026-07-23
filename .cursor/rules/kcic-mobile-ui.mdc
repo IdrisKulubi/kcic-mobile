@@ -1,0 +1,33 @@
+---
+description: KCIC mobile UI — Expo app screens and components
+globs: app/**/*.tsx,components/**/*.tsx
+alwaysApply: false
+---
+
+# KCIC Mobile UI
+
+Read Expo v54 docs before writing code (`AGENTS.md`).
+
+## Colors
+
+Use `palette` from `@/components/kcic/ui`:
+
+- `palette.green` — primary buttons, active pills, success
+- `palette.gray` / `palette.slate` / `palette.muted` — secondary text
+- `palette.white` — surfaces
+- `palette.blue` — taxonomy, links, info chips
+- `palette.brown` — warm emphasis (sparingly)
+- `palette.ink` — primary body/headings (derived dark)
+- `palette.shell` / `palette.panel` / `palette.line` — layout neutrals
+
+Do not hardcode hex values. Do not use deprecated `forest` or off-palette greens/blues.
+
+## Typography
+
+- Auth screens: Inter via `@/lib/typography`
+- Elsewhere: system font, weight + size hierarchy
+
+## Patterns
+
+- Light, white-led UI. Green primary CTAs. Pill-shaped auth buttons.
+- 8px–18px radius per `DESIGN.md`. No nested cards.

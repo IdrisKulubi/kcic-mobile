@@ -1,26 +1,47 @@
 # KCIC Climate Hub Design System
 
-## Brand Colors
-- Primary lime: `#80C738`
-- Deep forest: `#006B45`
-- Innovation blue: `#00ADDD`
-- Ink: `#111827`
-- Muted slate: `#5E6875`
-- Soft shell: `#F6F8FF`
-- Cool panel: `#EEF4FF`
-- Line: `#DDE7D8`
+## Brand Colors (canonical)
+
+These five colors are the only approved brand hues. Do not introduce competing greens, blues, or neutrals outside this palette.
+
+| Token | Hex | Role |
+|-------|-----|------|
+| Green | `#80C738` | Primary actions, active states, success emphasis |
+| Gray | `#8B8D90` | Secondary text, labels, subdued UI, borders |
+| White | `#FFFFFF` | Primary surfaces, cards, inverted text on colored buttons |
+| Blue | `#00ADDD` | Information, links, content taxonomy, resource cues |
+| Brown | `#E97451` | Warm highlights, non-destructive emphasis, featured callouts |
+
+### Derived neutrals (allowed)
+
+For accessibility and layout, derive borders, disabled states, and panel backgrounds from Gray and White only. Examples:
+
+- Primary text: darkened Gray (`#4A4B4D` or similar)
+- Panel / shell: very light Gray tint on White (`#F5F5F6`)
+- Borders: Gray at reduced opacity or `#E5E5E6`
+
+Never use legacy forest (`#006B45`), ink (`#111827`), shell blue (`#F6F8FF`), or other off-palette brand colors.
 
 ## Typography
-Use the native system font stack through React Native. Use weight and size contrast rather than decorative type. Headings should feel editorial and confident; labels and metadata should stay compact.
+
+- **Mobile app:** Native system font stack. Use weight and size contrast rather than decorative type.
+- **Auth and email:** Inter where loaded (auth screens, React Email templates).
+- Headings: editorial and confident. Labels and metadata: compact.
 
 ## Shape And Spacing
-- Use an 8px radius family for compact controls.
-- Use 14px to 18px radius for feature cards and image-led story panels where touch affordance matters.
-- Keep bottom navigation stable and familiar.
-- Avoid nested cards. Sections can have white panels, but repeated content should carry the card treatment.
+
+- 8px radius family for compact controls.
+- 14px to 18px radius for feature cards and image-led panels.
+- Stable bottom navigation. Avoid nested cards.
 
 ## Interface Register
-Light mode is preferred because users will present and read the prototype in meeting rooms, on phones, and in daylight. Use restrained color with primary lime for current state and actions, deep forest for credibility, and blue for content taxonomy or resource cues.
+
+Light mode, white-led surfaces. Green for primary actions. Blue for informational and taxonomy states. Brown for warm emphasis. Gray for secondary copy. Restrained color; hierarchy through type and spacing.
 
 ## Motion
-Keep motion subtle and state-driven. No choreographed page loads are required for the prototype.
+
+Subtle, state-driven motion only. No choreographed page loads.
+
+## Email
+
+React Email templates use the shared theme in `backend/kcic-mobile/emails/theme.ts`. White-led layout, semantic tokens (`brand`, `accent`, `warm`, `fg`, `fg-2`, `fg-3`), no raw hex in template files.
