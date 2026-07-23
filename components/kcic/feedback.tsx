@@ -1,15 +1,13 @@
 import { Alert, Platform } from 'react-native';
 
+import { toast } from '@/lib/toast';
+
 export function showPrototypeAlert(title: string, message: string) {
-  if (Platform.OS === 'web') {
-    window.alert(`${title}\n\n${message}`);
-    return;
-  }
-  Alert.alert(title, message);
+  toast.info(title, message);
 }
 
 export function showGrantApply() {
-  showPrototypeAlert(
+  toast.success(
     'Application submitted',
     'Your Green Innovation Grant application has been received. The KCIC team will contact you within 5 business days.'
   );
@@ -23,26 +21,31 @@ export function showEditProfile() {
 }
 
 export function showAddTopic(onAdd: (topic: string) => void) {
+  const addTopic = (topic: string) => {
+    onAdd(topic);
+    toast.success('Interest added', `${topic} was added to your interests.`);
+  };
+
   if (Platform.OS === 'web') {
     const topic = window.prompt('Add a topic of interest:');
-    if (topic?.trim()) onAdd(topic.trim());
+    if (topic?.trim()) addTopic(topic.trim());
     return;
   }
   if (Platform.OS === 'ios') {
     Alert.prompt('Add topic', 'Enter a new area of interest', (text) => {
-      if (text?.trim()) onAdd(text.trim());
+      if (text?.trim()) addTopic(text.trim());
     });
     return;
   }
   Alert.alert('Add topic', 'Choose a topic to add', [
-    { text: 'Water Innovation', onPress: () => onAdd('Water Innovation') },
-    { text: 'Carbon Markets', onPress: () => onAdd('Carbon Markets') },
+    { text: 'Water Innovation', onPress: () => addTopic('Water Innovation') },
+    { text: 'Carbon Markets', onPress: () => addTopic('Carbon Markets') },
     { text: 'Cancel', style: 'cancel' },
   ]);
 }
 
 export function showRsvpSuccess(eventTitle: string, interested: boolean) {
-  showPrototypeAlert(
+  (interested ? toast.success : toast.info)(
     interested ? "You're registered" : 'RSVP removed',
     interested
       ? `You're interested in "${eventTitle}". We'll send a reminder before it starts.`
@@ -51,5 +54,5 @@ export function showRsvpSuccess(eventTitle: string, interested: boolean) {
 }
 
 export function showOpenResource(title: string, detail: string) {
-  showPrototypeAlert('Opening resource', `${title}\n\n${detail}`);
+  toast.info('Opening resource', `${title}\n${detail}`);
 }

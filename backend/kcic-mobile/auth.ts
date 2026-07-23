@@ -151,6 +151,7 @@ export const auth = betterAuth({
   },
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: true,
   },
   socialProviders: {
     google: {
@@ -176,6 +177,8 @@ export const auth = betterAuth({
       }),
     },
     emailOTP({
+      sendVerificationOnSignUp: true,
+      overrideDefaultEmailVerification: true,
       async sendVerificationOTP({ email, otp, type }) {
         try {
           const subject =

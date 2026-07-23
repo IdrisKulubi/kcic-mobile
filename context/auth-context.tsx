@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { apiFetch } from '@/lib/api-client';
 import { AuthUser, clearSession, getStoredAuth, saveCustomSession } from '@/lib/auth-helpers';
 import { getLastAuthenticatedRoute, setLastAuthenticatedRoute } from '@/lib/session-cache';
+import { toast } from '@/lib/toast';
 
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
@@ -128,6 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setStatus('unauthenticated');
     router.replace('/(auth)' as never);
+    toast.success('Signed out', 'Your session has been cleared from this device.');
   }, [router]);
 
   const value = useMemo(
@@ -151,4 +153,3 @@ export function useAuth() {
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
 }
-

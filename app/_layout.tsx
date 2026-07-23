@@ -6,6 +6,7 @@ import { useCallback, useState } from 'react';
 import 'react-native-reanimated';
 
 import { IntroSplash } from '@/components/kcic/intro-splash';
+import { ToastProvider } from '@/components/kcic/toast-provider';
 import { AuthProvider } from '@/context/auth-context';
 import { PrototypeProvider, usePrototype } from '@/context/prototype-context';
 import { defaultStackScreenOptions, modalStackScreenOptions } from '@/lib/stack-options';
@@ -62,9 +63,11 @@ function RootNavigation() {
 export default function RootLayout() {
   return (
     <PrototypeProvider>
-      <AuthProvider>
-        <RootNavigation />
-      </AuthProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <RootNavigation />
+        </AuthProvider>
+      </ToastProvider>
     </PrototypeProvider>
   );
 }
