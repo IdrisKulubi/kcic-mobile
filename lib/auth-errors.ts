@@ -1,6 +1,6 @@
 import type { ToastInput } from '@/lib/toast';
 
-export type AuthAction = 'sign-in' | 'sign-up' | 'google' | 'apple';
+export type AuthAction = 'sign-in' | 'sign-up' | 'password-reset' | 'google' | 'apple';
 
 export class AuthRequestError extends Error {
   code?: string;
@@ -85,6 +85,19 @@ export function getAuthErrorToast(error: unknown, action: AuthAction): ToastInpu
   }
 
   if (
+    normalized.includes('invalid_otp') ||
+    normalized.includes('invalid otp') ||
+    normalized.includes('otp_expired') ||
+    normalized.includes('otp expired')
+  ) {
+    return {
+      tone: 'error',
+      title: 'Invalid or expired code',
+      message: 'Check the code or request a new one, then try again.',
+    };
+  }
+
+  if (
     normalized.includes('failed to fetch') ||
     normalized.includes('network request failed') ||
     normalized.includes('network error') ||
@@ -111,6 +124,15 @@ export function getAuthErrorToast(error: unknown, action: AuthAction): ToastInpu
     normalized.includes('verification email') ||
     normalized.includes('send email')
   ) {
+    if (action === 'password-reset') {
+      return {
+        tone: 'error',
+        title: 'Could not send reset code',
+        message: 'Please wait a moment and try again.',
+        duration: 6000,
+      };
+    }
+
     return {
       tone: 'warning',
       title: 'Account created',
@@ -130,6 +152,7 @@ export function getAuthErrorToast(error: unknown, action: AuthAction): ToastInpu
   const titles: Record<AuthAction, string> = {
     'sign-in': 'Could not sign in',
     'sign-up': 'Could not create account',
+    'password-reset': 'Could not reset password',
     google: 'Google sign-in failed',
     apple: 'Apple sign-in failed',
   };

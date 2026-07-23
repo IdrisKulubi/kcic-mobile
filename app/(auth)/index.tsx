@@ -24,6 +24,7 @@ import {
   SocialProviderButton,
   VerificationCodeInput,
 } from '@/components/kcic/auth-ui';
+import { PasswordRecoveryForm } from '@/components/kcic/password-recovery-form';
 import { palette } from '@/components/kcic/ui';
 import { useAuth } from '@/context/auth-context';
 import { authClient } from '@/lib/auth-client';
@@ -47,12 +48,12 @@ async function waitForStoredAuth() {
 
 export default function AuthScreen() {
   const router = useRouter();
-  const { refreshSession, setAuthenticatedSession } = useAuth();
+  const { refreshSession } = useAuth();
   const emailInputRef = useRef<TextInput>(null);
   const passwordInputRef = useRef<TextInput>(null);
   const [mode, setMode] = useState<AuthMode>('sign-in');
   const [step, setStep] = useState<AuthStep>('form');
-  const [name, setName] = useState('');
+  const [isRecoveringPassword, setIsRecoveringPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
@@ -73,6 +74,7 @@ export default function AuthScreen() {
   const switchMode = (nextMode: AuthMode) => {
     setMode(nextMode);
     setStep('form');
+    setIsRecoveringPassword(false);
   };
 
   const sendVerificationCode = async () => {
@@ -115,7 +117,7 @@ export default function AuthScreen() {
     setBusy(true);
     try {
       const client = authClient as any;
-      const signupName = name.trim() || displayNameFromEmail(normalizedEmail);
+      const signupName = displayNameFromEmail(normalizedEmail);
       const result =
         mode === 'sign-up'
           ? await client.signUp.email({ name: signupName, email: normalizedEmail, password })
@@ -235,22 +237,6 @@ export default function AuthScreen() {
     }
   };
 
-  const handlePrototypeAccess = async () => {
-    await setAuthenticatedSession({
-      token: 'prototype-local-session-token',
-      user: {
-        id: 'prototype-user-idris',
-        name: name.trim() || 'Idris Kulubi',
-        email: normalizedEmail || 'idris@kcic.co.ke',
-        emailVerified: true,
-        role: 'Climate Innovation Member',
-        organization: 'Kenya Climate Innovation Center',
-        location: 'Nairobi, Kenya',
-      },
-    });
-    toast.info('Prototype session', 'You are viewing the app with local demo data.');
-  };
-
   const heroTitle =
     step === 'verify'
       ? 'Check your email'
@@ -279,13 +265,23 @@ export default function AuthScreen() {
               <View style={styles.content}>
                 <View style={styles.navRow}>
                   <Pressable
-                    onPress={() => (step === 'verify' ? setStep('form') : router.canGoBack() ? router.back() : undefined)}
+                    onPress={() => {
+                      if (isRecoveringPassword) {
+                        setIsRecoveringPassword(false);
+                        return;
+                      }
+                      if (step === 'verify') {
+                        setStep('form');
+                        return;
+                      }
+                      if (router.canGoBack()) router.back();
+                    }}
                     style={styles.backButton}
                     accessibilityLabel="Go back">
                     <MaterialIcons name="arrow-back" size={22} color={palette.ink} />
                   </Pressable>
                   <View style={styles.navSpacer} />
-                  {step === 'form' ? (
+                  {step === 'form' && !isRecoveringPassword ? (
                     <Pressable onPress={() => switchMode(isSignIn ? 'sign-up' : 'sign-in')} hitSlop={8}>
                       <Text style={styles.navAction}>{isSignIn ? 'Sign up' : 'Sign in'}</Text>
                     </Pressable>
@@ -294,13 +290,25 @@ export default function AuthScreen() {
                   )}
                 </View>
 
-                <View style={styles.hero}>
-                  <Text style={styles.title}>{heroTitle}</Text>
-                  <Text style={styles.subtitle}>{heroSubtitle}</Text>
-                  {step === 'verify' ? <Text style={styles.emailValue}>{normalizedEmail}</Text> : null}
-                </View>
+                {isRecoveringPassword ? (
+                  <PasswordRecoveryForm
+                    initialEmail={normalizedEmail}
+                    onCancel={() => setIsRecoveringPassword(false)}
+                    onComplete={async () => {
+                      await waitForStoredAuth();
+                      await refreshSession();
+                      setIsRecoveringPassword(false);
+                    }}
+                  />
+                ) : (
+                  <>
+                    <View style={styles.hero}>
+                      <Text style={styles.title}>{heroTitle}</Text>
+                      <Text style={styles.subtitle}>{heroSubtitle}</Text>
+                      {step === 'verify' ? <Text style={styles.emailValue}>{normalizedEmail}</Text> : null}
+                    </View>
 
-                {step === 'verify' ? (
+                    {step === 'verify' ? (
                   <View style={styles.form}>
                     <Text style={styles.formLabel}>Enter verification code</Text>
                     <VerificationCodeInput value={code} onChange={setCode} />
@@ -353,7 +361,8 @@ export default function AuthScreen() {
                           <Text style={styles.helperText}>Remember me</Text>
                         </Pressable>
                         <Pressable
-                          onPress={() => toast.info('Password reset', 'Password recovery will be connected to email OTP next.')}>
+                          accessibilityRole="button"
+                          onPress={() => setIsRecoveringPassword(true)}>
                           <Text style={styles.linkText}>Forgot password?</Text>
                         </Pressable>
                       </View>
@@ -419,7 +428,7 @@ export default function AuthScreen() {
                   </View>
                 )}
 
-                {step === 'form' ? (
+                    {step === 'form' ? (
                   <Pressable onPress={() => switchMode(isSignIn ? 'sign-up' : 'sign-in')} style={styles.footerPrompt}>
                     <Text style={styles.footerPromptText}>
                       {isSignIn ? "Don't have an account? " : 'Already have an account? '}
@@ -428,7 +437,9 @@ export default function AuthScreen() {
                       </Text>
                     </Text>
                   </Pressable>
-                ) : null}
+                    ) : null}
+                  </>
+                )}
               </View>
             </TouchableWithoutFeedback>
           </ScrollView>

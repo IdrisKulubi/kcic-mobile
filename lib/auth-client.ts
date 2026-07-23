@@ -15,6 +15,6 @@ export const authClient = createAuthClient({
       storagePrefix: AUTH_STORAGE_PREFIX,
       storage: SecureStore,
     }) as never,
-    emailOTPClient() as never,
+    emailOTPClient(),
   ],
 });

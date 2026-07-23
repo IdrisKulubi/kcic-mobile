@@ -123,6 +123,12 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
+    revokeSessionsOnPasswordReset: true,
+  },
+  emailVerification: {
+    // The mobile client requests the OTP after account creation so an email
+    // provider failure does not roll back an otherwise valid account.
+    sendOnSignUp: false,
   },
   socialProviders: {
     google: {
@@ -148,7 +154,7 @@ export const auth = betterAuth({
       }),
     },
     emailOTP({
-      sendVerificationOnSignUp: true,
+      sendVerificationOnSignUp: false,
       overrideDefaultEmailVerification: true,
       async sendVerificationOTP({ email, otp, type }) {
         try {
@@ -162,6 +168,7 @@ export const auth = betterAuth({
           })
         } catch (error) {
           console.error("[EMAIL OTP] Error sending email:", error)
+          throw error
         }
       },
     }),
