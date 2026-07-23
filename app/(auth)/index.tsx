@@ -123,9 +123,14 @@ export default function AuthScreen() {
       throwIfAuthError(result);
 
       if (mode === 'sign-up') {
-        setCode('');
-        setStep('verify');
-        toast.info('Check your email', `We sent a 6-digit verification code to ${normalizedEmail}.`);
+        try {
+          await sendVerificationCode();
+        } catch (verificationError) {
+          setCode('');
+          setStep('verify');
+          toast.show(getAuthErrorToast(verificationError, 'sign-up'));
+          return;
+        }
         return;
       }
 

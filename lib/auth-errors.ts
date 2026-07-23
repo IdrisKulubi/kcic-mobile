@@ -23,9 +23,24 @@ export function throwIfAuthError(result: unknown) {
   }
 
   if (typeof error === 'object') {
-    const value = error as { message?: unknown; code?: unknown };
+    const value = error as {
+      message?: unknown;
+      code?: unknown;
+      status?: unknown;
+      statusText?: unknown;
+    };
+
+    const message =
+      typeof value.message === 'string'
+        ? value.message
+        : typeof value.statusText === 'string' && value.statusText.trim()
+          ? value.statusText
+          : typeof value.code === 'string'
+            ? value.code.replace(/_/g, ' ').toLowerCase()
+            : 'Authentication could not be completed.';
+
     throw new AuthRequestError(
-      typeof value.message === 'string' ? value.message : 'Authentication could not be completed.',
+      message,
       typeof value.code === 'string' ? value.code : undefined
     );
   }
@@ -88,6 +103,19 @@ export function getAuthErrorToast(error: unknown, action: AuthAction): ToastInpu
       title: 'Sign-in incomplete',
       message: 'Your account was verified, but this device could not save the session. Please try again.',
       duration: 5500,
+    };
+  }
+
+  if (
+    normalized.includes('failed to send email') ||
+    normalized.includes('verification email') ||
+    normalized.includes('send email')
+  ) {
+    return {
+      tone: 'warning',
+      title: 'Account created',
+      message: 'We could not send the verification email yet. Use "I didn\'t get a code" to resend.',
+      duration: 6000,
     };
   }
 

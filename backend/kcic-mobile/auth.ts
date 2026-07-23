@@ -162,7 +162,6 @@ export const auth = betterAuth({
           })
         } catch (error) {
           console.error("[EMAIL OTP] Error sending email:", error)
-          throw error
         }
       },
     }),
