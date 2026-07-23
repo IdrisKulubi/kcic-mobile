@@ -1,3 +1,5 @@
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+
 export type Article = {
   id: string;
   category: string;
@@ -298,6 +300,79 @@ export const notifications: AppNotification[] = [
 
 export function bookmarkKey(type: ContentType | 'resource', id: string) {
   return `${type}:${id}`;
+}
+
+export type BookmarkType = ContentType | 'resource';
+
+export type ResolvedBookmark = {
+  key: string;
+  type: BookmarkType;
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: keyof typeof MaterialIcons.glyphMap;
+};
+
+export function resolveBookmark(key: string): ResolvedBookmark | null {
+  const separator = key.indexOf(':');
+  if (separator === -1) return null;
+
+  const type = key.slice(0, separator) as BookmarkType;
+  const id = key.slice(separator + 1);
+
+  if (type === 'article') {
+    const article = getArticle(id);
+    if (!article) return null;
+    return {
+      key,
+      type,
+      id,
+      title: article.title,
+      subtitle: `${article.category} · ${article.readTime}`,
+      icon: 'article',
+    };
+  }
+
+  if (type === 'story') {
+    const story = getStory(id);
+    if (!story) return null;
+    return {
+      key,
+      type,
+      id,
+      title: story.title,
+      subtitle: `${story.sector} · ${story.founder}`,
+      icon: 'auto-stories',
+    };
+  }
+
+  if (type === 'event') {
+    const event = getEvent(id);
+    if (!event) return null;
+    return {
+      key,
+      type,
+      id,
+      title: event.title,
+      subtitle: `${event.date} · ${event.location}`,
+      icon: 'event',
+    };
+  }
+
+  if (type === 'resource') {
+    const resource = savedResources.find((item) => item.id === id);
+    if (!resource) return null;
+    return {
+      key,
+      type,
+      id,
+      title: resource.title,
+      subtitle: resource.detail,
+      icon: resource.icon as ResolvedBookmark['icon'],
+    };
+  }
+
+  return null;
 }
 
 export function getArticle(id: string) {

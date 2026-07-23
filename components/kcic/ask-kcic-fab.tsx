@@ -1,5 +1,6 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import * as Haptics from 'expo-haptics';
+import { useTabBarMinimized } from 'expo-glass-tabs';
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 import Animated, {
@@ -15,15 +16,21 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { palette } from '@/components/kcic/ui';
 import { usePrototype } from '@/context/prototype-context';
+import {
+  GLASS_TAB_BAR_EXPANDED,
+  GLASS_TAB_BAR_MARGIN,
+  GLASS_TAB_BAR_MINIMIZED,
+  TAB_BAR_FLOAT_OFFSET,
+} from '@/lib/tab-bar-layout';
 import { openAskKcic } from '@/lib/navigation';
 
-const TAB_BAR_HEIGHT = 78;
 const FAB_SIZE = 56;
 const FAB_EXPANDED_WIDTH = 156;
 
 export function AskKcicFab() {
   const insets = useSafeAreaInsets();
   const { appSessionReady } = usePrototype();
+  const tabBarMinimized = useTabBarMinimized();
   const expand = useSharedValue(0);
   const entrance = useSharedValue(0);
 
@@ -64,6 +71,12 @@ export function AskKcicFab() {
       },
     ],
     width: interpolate(expand.value, [0, 1], [FAB_SIZE, FAB_EXPANDED_WIDTH]),
+    bottom:
+      interpolate(tabBarMinimized.value, [0, 1], [GLASS_TAB_BAR_EXPANDED, GLASS_TAB_BAR_MINIMIZED]) +
+      GLASS_TAB_BAR_MARGIN +
+      TAB_BAR_FLOAT_OFFSET +
+      Math.max(insets.bottom, 10) +
+      10,
   }));
 
   const labelStyle = useAnimatedStyle(() => ({
@@ -85,15 +98,7 @@ export function AskKcicFab() {
   };
 
   return (
-    <Animated.View
-      pointerEvents="box-none"
-      style={[
-        styles.host,
-        {
-          bottom: TAB_BAR_HEIGHT + Math.max(insets.bottom, 10) + 10,
-        },
-        containerStyle,
-      ]}>
+    <Animated.View pointerEvents="box-none" style={[styles.host, containerStyle]}>
       <Pressable
         onPress={handlePress}
         style={styles.fab}

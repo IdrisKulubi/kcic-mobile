@@ -34,6 +34,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 function isProtectedSegment(segment?: string) {
   return (
     segment === '(tabs)' ||
+    segment === 'library' ||
     segment === 'search' ||
     segment === 'notifications' ||
     segment === 'ask' ||

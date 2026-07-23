@@ -1,71 +1,58 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import { useRouter } from 'expo-router';
+import { Tabs, TabList, TabSlot, TabTrigger } from 'expo-router/ui';
 import { View } from 'react-native';
+import {
+  GlassTabBar,
+  GlassTabButton,
+  TabBarMinimizeProvider,
+  renderFadingTabScreen,
+  type GlassTabItem,
+} from 'expo-glass-tabs';
 
 import { AskKcicFab } from '@/components/kcic/ask-kcic-fab';
-import { HapticTab } from '@/components/haptic-tab';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { palette } from '@/components/kcic/ui';
+import { TAB_BAR_FLOAT_OFFSET } from '@/lib/tab-bar-layout';
+
+const TAB_ITEMS: (GlassTabItem & { href: string })[] = [
+  { name: 'explore', href: '/explore', label: 'Explore', icon: 'safari.fill' },
+  { name: 'index', href: '/', label: 'For You', icon: 'sparkles' },
+  { name: 'podcasts', href: '/podcasts', label: 'Media', icon: 'play.rectangle.fill' },
+  { name: 'saved', href: '/saved', label: 'Saved', icon: 'bookmark.fill' },
+  { name: 'profile', href: '/profile', label: 'Profile', icon: 'person.crop.circle.fill' },
+];
+
+const glassTheme = {
+  activeTint: palette.green,
+  inactiveTint: palette.slate,
+  highlight: 'rgba(128, 199, 56, 0.14)',
+  glassTint: 'rgba(255, 255, 255, 0.55)',
+  solidFallback: 'rgba(255, 255, 255, 0.82)',
+};
 
 export default function TabLayout() {
+  const router = useRouter();
+
   return (
-    <View style={{ flex: 1 }}>
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: palette.lime,
-        tabBarInactiveTintColor: palette.ink,
-        headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarStyle: {
-          height: 78,
-          paddingTop: 8,
-          paddingBottom: 10,
-          borderTopWidth: 1,
-          borderTopColor: '#E7ECE6',
-          backgroundColor: '#FEFFFC',
-        },
-        tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: '800',
-        },
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <MaterialIcons size={24} name="home" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Insights',
-          tabBarIcon: ({ color }) => <MaterialIcons size={24} name="visibility" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="library"
-        options={{
-          title: 'Library',
-          tabBarIcon: ({ color }) => <MaterialIcons size={24} name="menu-book" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="podcasts"
-        options={{
-          title: 'Podcasts',
-          tabBarIcon: ({ color }) => <MaterialIcons size={24} name="play-circle-outline" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ color }) => <MaterialIcons size={24} name="person-outline" color={color} />,
-        }}
-      />
-    </Tabs>
-    <AskKcicFab />
-    </View>
+    <TabBarMinimizeProvider>
+      <View style={{ flex: 1 }}>
+        <Tabs>
+          <TabSlot style={{ height: '100%' }} renderFn={renderFadingTabScreen} />
+          <TabList asChild>
+            <GlassTabBar
+              theme={glassTheme}
+              floatOffset={TAB_BAR_FLOAT_OFFSET}
+              haptics
+              onIndexSelected={(index) => router.navigate(TAB_ITEMS[index].href as never)}>
+              {TAB_ITEMS.map(({ href, ...item }, index) => (
+                <TabTrigger key={item.name} name={item.name} href={href as never} asChild>
+                  <GlassTabButton item={item} index={index} />
+                </TabTrigger>
+              ))}
+            </GlassTabBar>
+          </TabList>
+        </Tabs>
+        <AskKcicFab />
+      </View>
+    </TabBarMinimizeProvider>
   );
 }

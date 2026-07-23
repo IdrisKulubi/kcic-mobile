@@ -84,7 +84,7 @@ export default function ProfileScreen() {
         <SectionTitle
           title="Saved Resources"
           action="View All"
-          onPressAction={() => router.push('/library')}
+          onPressAction={() => router.push('/saved')}
         />
         {savedResources.map((resource) => {
           const bKey = bookmarkKey('resource', resource.id);

@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as WebBrowser from 'expo-web-browser';
 import { useCallback, useState } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
 import { IntroSplash } from '@/components/kcic/intro-splash';
@@ -48,6 +49,7 @@ function RootNavigation() {
           name="ask"
           options={{ ...modalStackScreenOptions, presentation: 'modal', title: 'Ask KCIC', headerShown: true }}
         />
+        <Stack.Screen name="library" options={{ title: 'Library', headerShown: true }} />
         <Stack.Screen name="content/[type]/[id]" options={{ title: 'Insight', headerShown: true }} />
         <Stack.Screen
           name="settings/[slug]"
@@ -62,12 +64,14 @@ function RootNavigation() {
 
 export default function RootLayout() {
   return (
-    <PrototypeProvider>
-      <ToastProvider>
-        <AuthProvider>
-          <RootNavigation />
-        </AuthProvider>
-      </ToastProvider>
-    </PrototypeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <PrototypeProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <RootNavigation />
+          </AuthProvider>
+        </ToastProvider>
+      </PrototypeProvider>
+    </GestureHandlerRootView>
   );
 }

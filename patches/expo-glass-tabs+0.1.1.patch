@@ -1,0 +1,73 @@
+diff --git a/node_modules/expo-glass-tabs/build/glass-tab-bar.d.ts b/node_modules/expo-glass-tabs/build/glass-tab-bar.d.ts
+index 1ff17b7..d9b9048 100644
+--- a/node_modules/expo-glass-tabs/build/glass-tab-bar.d.ts
++++ b/node_modules/expo-glass-tabs/build/glass-tab-bar.d.ts
+@@ -28,13 +28,15 @@ export type GlassTabBarProps = TabListProps & {
+     theme?: Partial<GlassTabBarTheme>;
+     /** Haptic tick while the scrub crosses tab boundaries (iOS). */
+     haptics?: boolean;
++    /** Extra lift above the safe-area bottom inset so content can scroll underneath. */
++    floatOffset?: number;
+ };
+ /**
+  * Floating liquid-glass tab bar with Revolut-style minimize-on-scroll,
+  * a sliding highlight, and finger scrubbing. Use via `TabList asChild`
+  * with expo-router's headless tabs.
+  */
+-export declare function GlassTabBar({ children, onIndexSelected, theme: themeOverrides, haptics, ...props }: GlassTabBarProps): import("react").JSX.Element;
++export declare function GlassTabBar({ children, onIndexSelected, theme: themeOverrides, haptics, floatOffset, ...props }: GlassTabBarProps): import("react").JSX.Element;
+ /** One tab trigger: icon + label that fades when minimized. */
+ export declare function GlassTabButton({ item, index, isFocused, onPress, ...props }: TabTriggerSlotProps & {
+     item: GlassTabItem;
+diff --git a/node_modules/expo-glass-tabs/build/glass-tab-bar.js b/node_modules/expo-glass-tabs/build/glass-tab-bar.js
+index 420cb04..c4c3f42 100644
+--- a/node_modules/expo-glass-tabs/build/glass-tab-bar.js
++++ b/node_modules/expo-glass-tabs/build/glass-tab-bar.js
+@@ -49,7 +49,7 @@ const BarContext = createContext(null);
+  * a sliding highlight, and finger scrubbing. Use via `TabList asChild`
+  * with expo-router's headless tabs.
+  */
+-export function GlassTabBar({ children, onIndexSelected, theme: themeOverrides, haptics = true, ...props }) {
++export function GlassTabBar({ children, onIndexSelected, theme: themeOverrides, haptics = true, floatOffset = 0, ...props }) {
+     const insets = useSafeAreaInsets();
+     const { width: windowWidth } = useWindowDimensions();
+     const minimized = useMinimizeState();
+@@ -158,7 +158,7 @@ export function GlassTabBar({ children, onIndexSelected, theme: themeOverrides,
+             transform: [{ translateX: ROW_PAD_H + itemWidth * slideIndex.value }],
+         };
+     });
+-    const bottomOffset = Math.max(insets.bottom - 16, 12);
++    const bottomOffset = Math.max(insets.bottom - 16, 12) + floatOffset;
+     const barContext = useMemo(() => ({ slideIndex, isDragging, theme }), [slideIndex, isDragging, theme]);
+     return (_jsxs(View, { ...props, pointerEvents: "box-none", style: { position: 'absolute', left: 0, right: 0, bottom: 0 }, children: [_jsx(ProgressiveBlur, { direction: "bottom", style: {
+                     position: 'absolute',
+diff --git a/node_modules/expo-glass-tabs/src/glass-tab-bar.tsx b/node_modules/expo-glass-tabs/src/glass-tab-bar.tsx
+index c0f798b..1c657df 100644
+--- a/node_modules/expo-glass-tabs/src/glass-tab-bar.tsx
++++ b/node_modules/expo-glass-tabs/src/glass-tab-bar.tsx
+@@ -100,6 +100,8 @@ export type GlassTabBarProps = TabListProps & {
+   theme?: Partial<GlassTabBarTheme>;
+   /** Haptic tick while the scrub crosses tab boundaries (iOS). */
+   haptics?: boolean;
++  /** Extra lift above the safe-area bottom inset so content can scroll underneath. */
++  floatOffset?: number;
+ };
+ 
+ /**
+@@ -112,6 +114,7 @@ export function GlassTabBar({
+   onIndexSelected,
+   theme: themeOverrides,
+   haptics = true,
++  floatOffset = 0,
+   ...props
+ }: GlassTabBarProps) {
+   const insets = useSafeAreaInsets();
+@@ -258,7 +261,7 @@ export function GlassTabBar({
+     };
+   });
+ 
+-  const bottomOffset = Math.max(insets.bottom - 16, 12);
++  const bottomOffset = Math.max(insets.bottom - 16, 12) + floatOffset;
+   const barContext = useMemo(
+     () => ({ slideIndex, isDragging, theme }),
+     [slideIndex, isDragging, theme],

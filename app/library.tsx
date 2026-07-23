@@ -36,85 +36,85 @@ export default function LibraryScreen() {
 
   return (
     <AppScreen>
-      <TopBar
-        hasUnread={hasUnreadNotifications}
-        onPressNotifications={() => router.push('/notifications')}
-        onPressAvatar={() => router.push('/profile')}
-      />
+        <TopBar
+          hasUnread={hasUnreadNotifications}
+          onPressNotifications={() => router.push('/notifications')}
+          onPressAvatar={() => router.push('/profile')}
+        />
 
-      <Text style={styles.eyebrow}>Insights & Impact</Text>
-      <Text style={styles.title}>SME Stories</Text>
-      <Text style={styles.intro}>
-        Discover entrepreneurs translating innovation into measurable sustainable growth.
-      </Text>
+        <Text style={styles.eyebrow}>Insights & Impact</Text>
+        <Text style={styles.title}>SME Stories</Text>
+        <Text style={styles.intro}>
+          Discover entrepreneurs translating innovation into measurable sustainable growth.
+        </Text>
 
-      <View style={styles.filters}>
-        {librarySectorFilters.map((filter, index) => (
-          <Pill
-            key={filter.value}
-            label={filter.label}
-            active={activeSector === filter.value}
-            tone={index === 1 ? 'blue' : 'green'}
-            onPress={() => setActiveSector(filter.value)}
-          />
-        ))}
-      </View>
+        <View style={styles.filters}>
+          {librarySectorFilters.map((filter, index) => (
+            <Pill
+              key={filter.value}
+              label={filter.label}
+              active={activeSector === filter.value}
+              tone={index === 1 ? 'blue' : 'green'}
+              onPress={() => setActiveSector(filter.value)}
+            />
+          ))}
+        </View>
 
-      {filteredStories.map((story) => (
-        <Card
-          key={story.id}
-          style={styles.storyCard}
-          onPress={() => openContent('story', story.id)}>
-          <Image source={{ uri: story.image }} style={styles.storyImage} contentFit="cover" />
-          <View style={styles.storyBody}>
-            <View style={styles.storyMeta}>
-              <Text style={styles.sector}>{story.sector}</Text>
-              <Text style={styles.location}>{story.location}</Text>
-            </View>
-            <Text style={styles.storyTitle}>{story.title}</Text>
-            <View style={styles.impactBadge}>
-              <MaterialIcons name="bolt" size={13} color={palette.blue} />
-              <Text style={styles.impactText}>{story.impact}</Text>
-            </View>
-            <Text style={styles.summary} numberOfLines={4}>
-              {story.summary}
-            </Text>
-            <View style={styles.founderRow}>
-              <Text style={styles.founder}>{story.founder}</Text>
-              <Text style={styles.readStory}>Read Story</Text>
-            </View>
-          </View>
-        </Card>
-      ))}
-
-      <Card style={styles.eventsPanel}>
-        <SectionTitle title="Upcoming Events" icon="calendar-month" />
-        {events.map((event) => {
-          const rsvped = isRsvped(event.id);
-          return (
-            <View key={event.id} style={styles.eventCard}>
-              <Pressable onPress={() => openContent('event', event.id)}>
-                <Image source={{ uri: event.image }} style={styles.eventImage} contentFit="cover" />
-              </Pressable>
-              <View style={styles.eventBody}>
-                <Pill label={event.type} tone={event.type === 'Expo' ? 'cream' : 'green'} />
-                <Text style={styles.eventTime}>
-                  {event.date}, {event.time}
-                </Text>
-                <Pressable onPress={() => openContent('event', event.id)}>
-                  <Text style={styles.eventTitle}>{event.title}</Text>
-                </Pressable>
-                <Text style={styles.location}>{event.location}</Text>
-                <PrimaryButton
-                  label={rsvped ? "You're interested" : "I'm Interested"}
-                  onPress={() => handleRsvp(event.id, event.title)}
-                />
+        {filteredStories.map((story) => (
+          <Card
+            key={story.id}
+            style={styles.storyCard}
+            onPress={() => openContent('story', story.id)}>
+            <Image source={{ uri: story.image }} style={styles.storyImage} contentFit="cover" />
+            <View style={styles.storyBody}>
+              <View style={styles.storyMeta}>
+                <Text style={styles.sector}>{story.sector}</Text>
+                <Text style={styles.location}>{story.location}</Text>
+              </View>
+              <Text style={styles.storyTitle}>{story.title}</Text>
+              <View style={styles.impactBadge}>
+                <MaterialIcons name="bolt" size={13} color={palette.blue} />
+                <Text style={styles.impactText}>{story.impact}</Text>
+              </View>
+              <Text style={styles.summary} numberOfLines={4}>
+                {story.summary}
+              </Text>
+              <View style={styles.founderRow}>
+                <Text style={styles.founder}>{story.founder}</Text>
+                <Text style={styles.readStory}>Read Story</Text>
               </View>
             </View>
-          );
-        })}
-      </Card>
-    </AppScreen>
+          </Card>
+        ))}
+
+        <Card style={styles.eventsPanel}>
+          <SectionTitle title="Upcoming Events" icon="calendar-month" />
+          {events.map((event) => {
+            const rsvped = isRsvped(event.id);
+            return (
+              <View key={event.id} style={styles.eventCard}>
+                <Pressable onPress={() => openContent('event', event.id)}>
+                  <Image source={{ uri: event.image }} style={styles.eventImage} contentFit="cover" />
+                </Pressable>
+                <View style={styles.eventBody}>
+                  <Pill label={event.type} tone={event.type === 'Expo' ? 'cream' : 'green'} />
+                  <Text style={styles.eventTime}>
+                    {event.date}, {event.time}
+                  </Text>
+                  <Pressable onPress={() => openContent('event', event.id)}>
+                    <Text style={styles.eventTitle}>{event.title}</Text>
+                  </Pressable>
+                  <Text style={styles.location}>{event.location}</Text>
+                  <PrimaryButton
+                    label={rsvped ? "You're interested" : "I'm Interested"}
+                    onPress={() => handleRsvp(event.id, event.title)}
+                  />
+                </View>
+              </View>
+            );
+          })}
+        </Card>
+      </AppScreen>
   );
 }
 

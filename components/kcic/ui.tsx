@@ -1,10 +1,10 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Image } from 'expo-image';
+import { useMinimizeOnScroll } from 'expo-glass-tabs';
 import { ReactNode } from 'react';
 import {
   ImageSourcePropType,
   Pressable,
-  ScrollView,
   StyleSheet,
   StyleProp,
   Text,
@@ -12,7 +12,10 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { TAB_SCREEN_BOTTOM_INSET } from '@/lib/tab-bar-layout';
 
 export const palette = {
   green: '#80C738',
@@ -40,14 +43,18 @@ export const logo = require('@/assets/images/kcic-logo.png');
 export const profileAvatar = require('@/assets/images/image.png');
 
 export function AppScreen({ children, padded = true }: { children: ReactNode; padded?: boolean }) {
+  const onScroll = useMinimizeOnScroll();
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+      <Animated.ScrollView
         style={styles.scroll}
         contentContainerStyle={[styles.content, padded ? styles.padded : null]}
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+        onScroll={onScroll}
+        scrollEventThrottle={16}>
         {children}
-      </ScrollView>
+      </Animated.ScrollView>
     </SafeAreaView>
   );
 }
@@ -280,7 +287,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    paddingBottom: 118,
+    paddingBottom: TAB_SCREEN_BOTTOM_INSET,
   },
   padded: {
     paddingHorizontal: 18,
