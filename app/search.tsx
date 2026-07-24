@@ -14,30 +14,63 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { palette } from '@/components/kcic/ui';
+import { useContent } from '@/context/content-context';
 import { openContent, openPodcastEpisode } from '@/lib/navigation';
-import { articles, events, podcasts, stories } from '@/data/kcic';
+import { events, podcasts, stories } from '@/data/kcic';
+import { formatContentDate, type NewsArticle, type Opportunity, type Programme } from '@/lib/content-api';
 
 type SearchResult = {
   id: string;
   title: string;
   subtitle: string;
-  type: 'article' | 'story' | 'event' | 'podcast';
+  type: 'article' | 'story' | 'event' | 'podcast' | 'programme' | 'opportunity';
 };
 
-function buildResults(query: string): SearchResult[] {
+function buildResults(
+  query: string,
+  articles: NewsArticle[],
+  programmes: Programme[],
+  opportunities: Opportunity[]
+): SearchResult[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];
 
   const results: SearchResult[] = [];
 
   articles.forEach((a) => {
-    const haystack = `${a.title} ${a.summary} ${a.category}`.toLowerCase();
+    const haystack = `${a.title} ${a.excerpt} ${a.category}`.toLowerCase();
     if (haystack.includes(q)) {
       results.push({
-        id: a.id,
+        id: a.slug,
         title: a.title,
         subtitle: a.category,
         type: 'article',
+      });
+    }
+  });
+
+  programmes.forEach((programme) => {
+    const haystack = `${programme.title} ${programme.description} ${programme.category}`.toLowerCase();
+    if (haystack.includes(q)) {
+      results.push({
+        id: programme.slug,
+        title: programme.title,
+        subtitle: programme.category,
+        type: 'programme',
+      });
+    }
+  });
+
+  opportunities.forEach((opportunity) => {
+    const haystack = `${opportunity.title} ${opportunity.summary} ${opportunity.type}`.toLowerCase();
+    if (haystack.includes(q)) {
+      results.push({
+        id: opportunity.slug,
+        title: opportunity.title,
+        subtitle: opportunity.deadline
+          ? `Deadline ${formatContentDate(opportunity.deadline)}`
+          : opportunity.type,
+        type: 'opportunity',
       });
     }
   });
@@ -86,12 +119,18 @@ const typeLabels: Record<SearchResult['type'], string> = {
   story: 'SME Stories',
   event: 'Events',
   podcast: 'Podcasts',
+  programme: 'Programmes',
+  opportunity: 'Opportunities',
 };
 
 export default function SearchScreen() {
   const router = useRouter();
+  const { articles, programmes, opportunities } = useContent();
   const [query, setQuery] = useState('');
-  const results = useMemo(() => buildResults(query), [query]);
+  const results = useMemo(
+    () => buildResults(query, articles, programmes, opportunities),
+    [articles, opportunities, programmes, query]
+  );
 
   const grouped = useMemo(() => {
     const map = new Map<string, SearchResult[]>();
@@ -157,7 +196,11 @@ export default function SearchScreen() {
                     name={
                       item.type === 'article'
                         ? 'article'
-                        : item.type === 'story'
+                        : item.type === 'programme'
+                          ? 'account-balance'
+                          : item.type === 'opportunity'
+                            ? 'work-outline'
+                            : item.type === 'story'
                           ? 'business'
                           : item.type === 'event'
                             ? 'event'

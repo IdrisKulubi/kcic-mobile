@@ -6,7 +6,6 @@ import { openContent, openPodcastEpisode } from '@/lib/navigation';
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { showGrantApply } from '@/components/kcic/feedback';
 import {
   AppScreen,
   Card,
@@ -20,28 +19,34 @@ import {
 } from '@/components/kcic/ui';
 import { usePrototype } from '@/context/prototype-context';
 import {
-  articles,
   events,
-  filterArticlesByHomeCategory,
   homeCategoryFilters,
   podcasts,
 } from '@/data/kcic';
+import { ContentMessage, ContentSkeleton } from '@/components/kcic/content-state';
+import { useContent } from '@/context/content-context';
+import { formatContentDate } from '@/lib/content-api';
 
 export default function HomeScreen() {
   const router = useRouter();
   const { hasUnreadNotifications } = usePrototype();
+  const { articles, opportunities, loading, refreshing, error, refresh } = useContent();
   const [activeFilter, setActiveFilter] = useState(homeCategoryFilters[0].value);
 
-  const filteredArticles = useMemo(
-    () => filterArticlesByHomeCategory(articles, activeFilter),
-    [activeFilter]
-  );
-  const featured = filteredArticles[0] ?? articles[0];
+  const filteredArticles = useMemo(() => {
+    if (activeFilter === 'all') return articles;
+    const filter = homeCategoryFilters.find((item) => item.value === activeFilter);
+    if (!filter || !('categories' in filter)) return articles;
+    return articles.filter((article) => filter.categories?.includes(article.category));
+  }, [activeFilter, articles]);
+  const featured = filteredArticles.find((article) => article.featured) ?? filteredArticles[0] ?? articles[0];
   const insightArticles = filteredArticles.slice(1, 3);
   const upcoming = events[0];
+  const featuredOpportunity =
+    opportunities.find((opportunity) => opportunity.isFeatured) ?? opportunities[0];
 
   return (
-    <AppScreen>
+    <AppScreen refreshing={refreshing} onRefresh={() => void refresh()}>
       <TopBar
         showProfileAvatar
         hasUnread={hasUnreadNotifications}
@@ -68,17 +73,30 @@ export default function HomeScreen() {
         ))}
       </View>
 
-      <Card style={styles.featuredCard} onPress={() => openContent('article', featured.id)}>
-        <ImageHeader source={featured.image} height={232}>
-          <View style={styles.featuredCopy}>
-            <Pill label="Featured Report" tone="blue" />
-            <Text style={styles.featuredTitle}>{featured.title}</Text>
-            <Text style={styles.featuredSummary} numberOfLines={2}>
-              {featured.summary}
-            </Text>
-          </View>
-        </ImageHeader>
-      </Card>
+      {loading && articles.length === 0 ? <ContentSkeleton rows={3} /> : null}
+      {error && articles.length === 0 ? (
+        <ContentMessage title="Live content is unavailable" body={error} onRetry={() => void refresh()} />
+      ) : null}
+      {!loading && !error && articles.length === 0 ? (
+        <ContentMessage
+          title="No insights published yet"
+          body="Published KCIC reports and news will appear here."
+        />
+      ) : null}
+
+      {featured ? (
+        <Card style={styles.featuredCard} onPress={() => openContent('article', featured.slug)}>
+          <ImageHeader source={featured.thumbnail} height={232}>
+            <View style={styles.featuredCopy}>
+              <Pill label={featured.featured ? 'Featured' : featured.category} tone="blue" />
+              <Text style={styles.featuredTitle}>{featured.title}</Text>
+              <Text style={styles.featuredSummary} numberOfLines={2}>
+                {featured.excerpt}
+              </Text>
+            </View>
+          </ImageHeader>
+        </Card>
+      ) : null}
 
       {insightArticles.length > 0 ? (
         <Card style={styles.sectionCard}>
@@ -87,14 +105,14 @@ export default function HomeScreen() {
             <Pressable
               key={article.id}
               style={styles.insightRow}
-              onPress={() => openContent('article', article.id)}>
-              <Image source={{ uri: article.image }} style={styles.insightImage} contentFit="cover" />
+              onPress={() => openContent('article', article.slug)}>
+              <Image source={{ uri: article.thumbnail }} style={styles.insightImage} contentFit="cover" />
               <View style={styles.insightText}>
                 <Text style={styles.category}>{article.category}</Text>
                 <Text style={styles.insightTitle} numberOfLines={2}>
                   {article.title}
                 </Text>
-                <Text style={styles.meta}>{article.date}</Text>
+                <Text style={styles.meta}>{formatContentDate(article.publishedAt)}</Text>
               </View>
             </Pressable>
           ))}
@@ -143,17 +161,25 @@ export default function HomeScreen() {
         ))}
       </Card>
 
-      <View style={styles.grantCard}>
-        <View style={styles.grantBadge}>
-          <Text style={styles.grantBadgeText}>Closes in 5 days</Text>
+      {featuredOpportunity ? (
+        <View style={styles.grantCard}>
+          <View style={styles.grantBadge}>
+            <Text style={styles.grantBadgeText}>
+              {featuredOpportunity.deadline
+                ? `Deadline ${formatContentDate(featuredOpportunity.deadline)}`
+                : featuredOpportunity.type}
+            </Text>
+          </View>
+          <MaterialIcons name="payments" size={24} color={palette.white} style={styles.grantIcon} />
+          <Text style={styles.grantTitle}>{featuredOpportunity.title}</Text>
+          <Text style={styles.grantSummary}>{featuredOpportunity.summary}</Text>
+          <PrimaryButton
+            label="View opportunity"
+            variant="outline"
+            onPress={() => openContent('opportunity', featuredOpportunity.slug)}
+          />
         </View>
-        <MaterialIcons name="payments" size={24} color={palette.white} style={styles.grantIcon} />
-        <Text style={styles.grantTitle}>Green Innovation Grant</Text>
-        <Text style={styles.grantSummary}>
-          Up to $50k equity-free funding for early-stage waste management startups.
-        </Text>
-        <PrimaryButton label="Apply Now" variant="outline" onPress={showGrantApply} />
-      </View>
+      ) : null}
     </AppScreen>
   );
 }

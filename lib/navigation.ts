@@ -1,8 +1,13 @@
 import { router } from 'expo-router';
 
-import type { ContentType } from '@/data/kcic';
+export type NavigableContentType =
+  | 'article'
+  | 'story'
+  | 'event'
+  | 'programme'
+  | 'opportunity';
 
-export function openContent(type: ContentType, id: string) {
+export function openContent(type: NavigableContentType, id: string) {
   router.push({
     pathname: '/content/[type]/[id]',
     params: { type, id },
@@ -32,5 +37,5 @@ export function openNotificationLink(linkType: string, linkId: string) {
     openPodcastEpisode(linkId);
     return;
   }
-  openContent(linkType as ContentType, linkId);
+  openContent(linkType as NavigableContentType, linkId);
 }

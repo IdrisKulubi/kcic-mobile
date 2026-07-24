@@ -144,3 +144,5 @@ export const twoFactor = pgTable(
     index("two_factor_secret_idx").on(table.secret),
   ]
 )
+
+export * from "./content-schema"

@@ -5,6 +5,7 @@ import { ReactNode } from 'react';
 import {
   ImageSourcePropType,
   Pressable,
+  RefreshControl,
   StyleSheet,
   StyleProp,
   Text,
@@ -42,7 +43,17 @@ export const palette = {
 export const logo = require('@/assets/images/kcic-logo.png');
 export const profileAvatar = require('@/assets/images/image.png');
 
-export function AppScreen({ children, padded = true }: { children: ReactNode; padded?: boolean }) {
+export function AppScreen({
+  children,
+  padded = true,
+  refreshing = false,
+  onRefresh,
+}: {
+  children: ReactNode;
+  padded?: boolean;
+  refreshing?: boolean;
+  onRefresh?: () => void;
+}) {
   const onScroll = useMinimizeOnScroll();
 
   return (
@@ -52,7 +63,12 @@ export function AppScreen({ children, padded = true }: { children: ReactNode; pa
         contentContainerStyle={[styles.content, padded ? styles.padded : null]}
         showsVerticalScrollIndicator={false}
         onScroll={onScroll}
-        scrollEventThrottle={16}>
+        scrollEventThrottle={16}
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={palette.green} />
+          ) : undefined
+        }>
         {children}
       </Animated.ScrollView>
     </SafeAreaView>

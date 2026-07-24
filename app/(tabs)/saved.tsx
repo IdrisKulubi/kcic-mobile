@@ -7,10 +7,15 @@ import { showOpenResource } from '@/components/kcic/feedback';
 import { AppScreen, Card, PrimaryButton, SectionTitle, TopBar, palette } from '@/components/kcic/ui';
 import { usePrototype } from '@/context/prototype-context';
 import { resolveBookmark, type BookmarkType } from '@/data/kcic';
+import { useContent } from '@/context/content-context';
 import { openContent } from '@/lib/navigation';
 
-function bookmarkTypeLabel(type: BookmarkType) {
+type SavedType = BookmarkType | 'programme' | 'opportunity';
+
+function bookmarkTypeLabel(type: SavedType) {
   if (type === 'article') return 'Insight';
+  if (type === 'programme') return 'Programme';
+  if (type === 'opportunity') return 'Opportunity';
   if (type === 'story') return 'Story';
   if (type === 'event') return 'Event';
   return 'Resource';
@@ -19,16 +24,47 @@ function bookmarkTypeLabel(type: BookmarkType) {
 export default function SavedScreen() {
   const router = useRouter();
   const { bookmarks, hasUnreadNotifications, toggleBookmark } = usePrototype();
+  const { articles, programmes, opportunities } = useContent();
 
   const savedItems = useMemo(
     () =>
       Array.from(bookmarks)
-        .map((key) => resolveBookmark(key))
+        .map((key) => {
+          if (key.startsWith('article:programme:')) {
+            const slug = key.slice('article:programme:'.length);
+            const item = programmes.find((programme) => programme.slug === slug);
+            return item
+              ? { key, type: 'programme' as const, id: slug, title: item.title, subtitle: item.category, icon: 'account-balance' as const }
+              : null;
+          }
+          if (key.startsWith('article:opportunity:')) {
+            const slug = key.slice('article:opportunity:'.length);
+            const item = opportunities.find((opportunity) => opportunity.slug === slug);
+            return item
+              ? { key, type: 'opportunity' as const, id: slug, title: item.title, subtitle: item.type, icon: 'work-outline' as const }
+              : null;
+          }
+          if (key.startsWith('article:')) {
+            const slug = key.slice('article:'.length);
+            const item = articles.find((article) => article.slug === slug);
+            if (item) {
+              return {
+                key,
+                type: 'article' as const,
+                id: slug,
+                title: item.title,
+                subtitle: item.category,
+                icon: 'article' as const,
+              };
+            }
+          }
+          return resolveBookmark(key);
+        })
         .filter((item): item is NonNullable<typeof item> => item !== null),
-    [bookmarks]
+    [articles, bookmarks, opportunities, programmes]
   );
 
-  const handleOpen = (type: BookmarkType, id: string, title: string, detail: string) => {
+  const handleOpen = (type: SavedType, id: string, title: string, detail: string) => {
     if (type === 'resource') {
       showOpenResource(title, detail);
       return;
