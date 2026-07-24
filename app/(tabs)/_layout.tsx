@@ -1,6 +1,14 @@
 import { useRouter } from 'expo-router';
 import { Tabs, TabList, TabSlot, TabTrigger } from 'expo-router/ui';
-import { View } from 'react-native';
+import { ActivityIndicator, useColorScheme, View } from 'react-native';
+import {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+  Inter_800ExtraBold,
+  useFonts,
+} from '@expo-google-fonts/inter';
 import {
   GlassTabBar,
   GlassTabButton,
@@ -21,16 +29,37 @@ const TAB_ITEMS: (GlassTabItem & { href: string })[] = [
   { name: 'profile', href: '/profile', label: 'Profile', icon: 'person.crop.circle.fill' },
 ];
 
-const glassTheme = {
-  activeTint: palette.green,
-  inactiveTint: palette.slate,
-  highlight: 'rgba(128, 199, 56, 0.14)',
-  glassTint: 'rgba(255, 255, 255, 0.55)',
-  solidFallback: 'rgba(255, 255, 255, 0.82)',
-};
-
 export default function TabLayout() {
   const router = useRouter();
+  const isDark = useColorScheme() === 'dark';
+  const [fontsLoaded] = useFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+    Inter_800ExtraBold,
+  });
+  const glassTheme = {
+    activeTint: palette.green,
+    inactiveTint: isDark ? '#B8B9BB' : palette.slate,
+    highlight: 'rgba(128, 199, 56, 0.16)',
+    glassTint: isDark ? 'rgba(28, 29, 31, 0.76)' : 'rgba(255, 255, 255, 0.55)',
+    solidFallback: isDark ? 'rgba(28, 29, 31, 0.96)' : 'rgba(255, 255, 255, 0.88)',
+  };
+
+  if (!fontsLoaded) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: isDark ? '#151617' : palette.shell,
+        }}>
+        <ActivityIndicator color={palette.green} />
+      </View>
+    );
+  }
 
   return (
     <TabBarMinimizeProvider>

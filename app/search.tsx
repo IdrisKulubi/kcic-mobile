@@ -15,133 +15,23 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { palette } from '@/components/kcic/ui';
 import { useContent } from '@/context/content-context';
+import {
+  buildContentSearchResults,
+  groupSearchResults,
+  searchResultIcon,
+} from '@/lib/content-search';
 import { openContent, openPodcastEpisode } from '@/lib/navigation';
-import { events, podcasts, stories } from '@/data/kcic';
-import { formatContentDate, type NewsArticle, type Opportunity, type Programme } from '@/lib/content-api';
-
-type SearchResult = {
-  id: string;
-  title: string;
-  subtitle: string;
-  type: 'article' | 'story' | 'event' | 'podcast' | 'programme' | 'opportunity';
-};
-
-function buildResults(
-  query: string,
-  articles: NewsArticle[],
-  programmes: Programme[],
-  opportunities: Opportunity[]
-): SearchResult[] {
-  const q = query.trim().toLowerCase();
-  if (!q) return [];
-
-  const results: SearchResult[] = [];
-
-  articles.forEach((a) => {
-    const haystack = `${a.title} ${a.excerpt} ${a.category}`.toLowerCase();
-    if (haystack.includes(q)) {
-      results.push({
-        id: a.slug,
-        title: a.title,
-        subtitle: a.category,
-        type: 'article',
-      });
-    }
-  });
-
-  programmes.forEach((programme) => {
-    const haystack = `${programme.title} ${programme.description} ${programme.category}`.toLowerCase();
-    if (haystack.includes(q)) {
-      results.push({
-        id: programme.slug,
-        title: programme.title,
-        subtitle: programme.category,
-        type: 'programme',
-      });
-    }
-  });
-
-  opportunities.forEach((opportunity) => {
-    const haystack = `${opportunity.title} ${opportunity.summary} ${opportunity.type}`.toLowerCase();
-    if (haystack.includes(q)) {
-      results.push({
-        id: opportunity.slug,
-        title: opportunity.title,
-        subtitle: opportunity.deadline
-          ? `Deadline ${formatContentDate(opportunity.deadline)}`
-          : opportunity.type,
-        type: 'opportunity',
-      });
-    }
-  });
-
-  stories.forEach((s) => {
-    const haystack = `${s.title} ${s.summary} ${s.sector} ${s.founder}`.toLowerCase();
-    if (haystack.includes(q)) {
-      results.push({
-        id: s.id,
-        title: s.title,
-        subtitle: s.sector,
-        type: 'story',
-      });
-    }
-  });
-
-  events.forEach((e) => {
-    const haystack = `${e.title} ${e.location} ${e.type}`.toLowerCase();
-    if (haystack.includes(q)) {
-      results.push({
-        id: e.id,
-        title: e.title,
-        subtitle: e.date,
-        type: 'event',
-      });
-    }
-  });
-
-  podcasts.forEach((p) => {
-    const haystack = `${p.title} ${p.summary}`.toLowerCase();
-    if (haystack.includes(q)) {
-      results.push({
-        id: p.id,
-        title: p.title,
-        subtitle: p.publishedLabel,
-        type: 'podcast',
-      });
-    }
-  });
-
-  return results;
-}
-
-const typeLabels: Record<SearchResult['type'], string> = {
-  article: 'Articles',
-  story: 'SME Stories',
-  event: 'Events',
-  podcast: 'Podcasts',
-  programme: 'Programmes',
-  opportunity: 'Opportunities',
-};
 
 export default function SearchScreen() {
   const router = useRouter();
   const { articles, programmes, opportunities } = useContent();
   const [query, setQuery] = useState('');
   const results = useMemo(
-    () => buildResults(query, articles, programmes, opportunities),
+    () => buildContentSearchResults(query, articles, programmes, opportunities),
     [articles, opportunities, programmes, query]
   );
 
-  const grouped = useMemo(() => {
-    const map = new Map<string, SearchResult[]>();
-    results.forEach((r) => {
-      const label = typeLabels[r.type];
-      if (!map.has(label)) map.set(label, []);
-      map.get(label)!.push(r);
-    });
-    return Array.from(map.entries());
-  }, [results]);
-
+  const grouped = useMemo(() => groupSearchResults(results), [results]);
   const trimmedQuery = query.trim();
 
   return (
@@ -192,23 +82,7 @@ export default function SearchScreen() {
                       else openContent(item.type, item.id);
                     }, 100);
                   }}>
-                  <MaterialIcons
-                    name={
-                      item.type === 'article'
-                        ? 'article'
-                        : item.type === 'programme'
-                          ? 'account-balance'
-                          : item.type === 'opportunity'
-                            ? 'work-outline'
-                            : item.type === 'story'
-                          ? 'business'
-                          : item.type === 'event'
-                            ? 'event'
-                            : 'play-circle-outline'
-                    }
-                    size={22}
-                    color={palette.blue}
-                  />
+                  <MaterialIcons name={searchResultIcon(item.type)} size={22} color={palette.blue} />
                   <View style={styles.resultText}>
                     <Text style={styles.resultTitle} numberOfLines={2}>
                       {item.title}

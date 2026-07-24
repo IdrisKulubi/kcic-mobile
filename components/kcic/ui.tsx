@@ -48,22 +48,29 @@ export function AppScreen({
   padded = true,
   refreshing = false,
   onRefresh,
+  backgroundColor,
+  keyboardShouldPersistTaps,
 }: {
   children: ReactNode;
   padded?: boolean;
   refreshing?: boolean;
   onRefresh?: () => void;
+  backgroundColor?: string;
+  keyboardShouldPersistTaps?: 'always' | 'never' | 'handled';
 }) {
   const onScroll = useMinimizeOnScroll();
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <SafeAreaView
+      style={[styles.safeArea, backgroundColor ? { backgroundColor } : null]}
+      edges={['top', 'left', 'right']}>
       <Animated.ScrollView
-        style={styles.scroll}
+        style={[styles.scroll, backgroundColor ? { backgroundColor } : null]}
         contentContainerStyle={[styles.content, padded ? styles.padded : null]}
         showsVerticalScrollIndicator={false}
         onScroll={onScroll}
         scrollEventThrottle={16}
+        keyboardShouldPersistTaps={keyboardShouldPersistTaps}
         refreshControl={
           onRefresh ? (
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={palette.green} />

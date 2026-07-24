@@ -1,4 +1,5 @@
 import { apiFetch } from '@/lib/api-client';
+import { API_BASE_URL } from '@/lib/auth-client';
 
 export type NewsArticle = {
   id: string;
@@ -120,4 +121,21 @@ export function formatContentDate(value: string | null) {
     month: 'short',
     year: 'numeric',
   }).format(date);
+}
+
+export function resolveContentImageUrl(
+  ...candidates: Array<string | null | undefined>
+): string | undefined {
+  for (const candidate of candidates) {
+    const trimmed = candidate?.trim();
+    if (!trimmed) continue;
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    if (trimmed.startsWith('/')) return `${API_BASE_URL}${trimmed}`;
+    return trimmed;
+  }
+  return undefined;
+}
+
+export function getProgrammeImage(programme: Pick<Programme, 'headerImage' | 'image'>) {
+  return resolveContentImageUrl(programme.headerImage, programme.image);
 }

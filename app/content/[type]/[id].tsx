@@ -13,6 +13,8 @@ import { usePrototype } from '@/context/prototype-context';
 import {
   fetchContentDetail,
   formatContentDate,
+  getProgrammeImage,
+  resolveContentImageUrl,
   type NewsArticle,
   type Opportunity,
   type Programme,
@@ -175,7 +177,11 @@ function LiveContentDetail({
   const article = type === 'article' ? (item as NewsArticle) : null;
   const programme = type === 'programme' ? (item as Programme) : null;
   const opportunity = type === 'opportunity' ? (item as Opportunity) : null;
-  const image = article?.thumbnail ?? programme?.headerImage ?? programme?.image;
+  const image = article
+    ? resolveContentImageUrl(article.thumbnail)
+    : programme
+      ? getProgrammeImage(programme)
+      : undefined;
   const summary = article?.excerpt ?? programme?.description ?? opportunity?.summary ?? '';
   const bookmark = bookmarkKey(
     'article',
@@ -239,7 +245,11 @@ function LiveContentDetail({
                   <Text style={styles.detailHeading}>Programme sponsors</Text>
                   {programme.sponsors.map((sponsor) => (
                     <View key={sponsor.id} style={styles.sponsorRow}>
-                      <Image source={{ uri: sponsor.logo }} style={styles.sponsorLogo} contentFit="contain" />
+                      <Image
+                        source={{ uri: resolveContentImageUrl(sponsor.logo) }}
+                        style={styles.sponsorLogo}
+                        contentFit="contain"
+                      />
                       <Text style={styles.sponsorName}>{sponsor.name}</Text>
                     </View>
                   ))}
