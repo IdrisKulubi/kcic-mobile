@@ -1,5 +1,6 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
@@ -29,6 +30,7 @@ import {
   type SearchResult,
 } from '@/lib/content-search';
 import { openContent, openPodcastEpisode } from '@/lib/navigation';
+import { hapticLight, hapticSelection } from '@/lib/haptics';
 import { TAB_SCREEN_BOTTOM_INSET } from '@/lib/tab-bar-layout';
 import { fonts } from '@/lib/typography';
 import {
@@ -170,6 +172,7 @@ export default function ExploreScreen() {
           grouped={groupedSearchResults}
           colors={colors}
           onSelect={(item) => {
+            hapticLight();
             setSearchQuery('');
             if (item.type === 'podcast') openPodcastEpisode(item.id);
             else openContent(item.type, item.id);
@@ -189,7 +192,12 @@ export default function ExploreScreen() {
               key={filter.key}
               accessibilityRole="tab"
               accessibilityState={{ selected: active }}
-              onPress={() => setActiveSection(filter.key)}
+              onPress={() => {
+                if (activeSection !== filter.key) {
+                  hapticSelection();
+                }
+                setActiveSection(filter.key);
+              }}
               style={({ pressed }) => [
                 styles.sectionFilter,
                 {
@@ -312,7 +320,12 @@ export default function ExploreScreen() {
               return (
                 <Pressable
                   key={filter.value}
-                  onPress={() => setActiveInsightFilter(filter.value)}
+                  onPress={() => {
+                    if (activeInsightFilter !== filter.value) {
+                      hapticSelection();
+                    }
+                    setActiveInsightFilter(filter.value);
+                  }}
                   style={[
                     styles.insightFilter,
                     {
@@ -383,6 +396,7 @@ export default function ExploreScreen() {
               <Pressable
                 key={programme.id}
                 accessibilityRole="button"
+                accessibilityLabel={`View programme: ${programme.title}`}
                 onPress={() => openContent('programme', programme.slug)}
                 style={({ pressed }) => [
                   styles.programmeCard,
@@ -392,33 +406,44 @@ export default function ExploreScreen() {
                     opacity: pressed ? 0.82 : 1,
                   },
                 ]}>
-                {programmeImage ? (
-                  <Image
-                    source={{ uri: programmeImage }}
-                    style={styles.programmeImage}
-                    contentFit="cover"
-                  />
-                ) : (
+                <View style={styles.programmeMedia}>
+                  {programmeImage ? (
+                    <Image
+                      source={{ uri: programmeImage }}
+                      style={styles.programmeImage}
+                      contentFit="cover"
+                    />
+                  ) : (
+                    <View
+                      style={[
+                        styles.programmeImage,
+                        { backgroundColor: programme.color || colors.surfaceAlt },
+                      ]}
+                    />
+                  )}
                   <View
                     style={[
-                      styles.programmeImage,
-                      { backgroundColor: programme.color || colors.surfaceAlt },
-                    ]}
-                  />
-                )}
-                <View style={styles.programmeBody}>
-                  <View style={styles.programmeLabelRow}>
+                      styles.programmeCategoryChip,
+                      { backgroundColor: `${colors.surface}E6` },
+                    ]}>
                     <View style={[styles.programmeDot, { backgroundColor: palette.blue }]} />
                     <Text style={[styles.programmeCategory, { color: colors.muted }]} numberOfLines={1}>
                       {programme.category}
                     </Text>
                   </View>
-                  <Text style={[styles.programmeTitle, { color: colors.ink }]} numberOfLines={2}>
-                    {programme.title}
-                  </Text>
-                  <View style={styles.textLink}>
-                    <Text style={[styles.textLinkLabel, { color: colors.ink }]}>View programme</Text>
-                    <MaterialIcons name="arrow-forward" size={16} color={palette.green} />
+                  <LinearGradient
+                    colors={['transparent', 'rgba(15, 16, 17, 0.75)']}
+                    style={styles.programmeScrim}
+                    pointerEvents="none"
+                  />
+                  <View style={styles.programmeOverlay}>
+                    <Text style={styles.programmeTitle} numberOfLines={2}>
+                      {programme.title}
+                    </Text>
+                    <View style={styles.textLink}>
+                      <Text style={styles.textLinkLabel}>View programme</Text>
+                      <MaterialIcons name="arrow-forward" size={15} color={palette.green} />
+                    </View>
                   </View>
                 </View>
               </Pressable>
@@ -474,6 +499,20 @@ export default function ExploreScreen() {
 
       <Animated.View pointerEvents="box-none" style={[styles.floatingHeader, { paddingTop: insets.top }, headerStyle]}>
         <View style={styles.topBar}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Profile"
+            hitSlop={8}
+            onPress={() => {
+              hapticLight();
+              router.push('/profile');
+            }}
+            style={({ pressed }) => [
+              styles.headerButton,
+              { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.72 : 1 },
+            ]}>
+            <MaterialIcons name="person-outline" size={21} color={colors.ink} />
+          </Pressable>
           <View
             style={[
               styles.headerSearchBar,
@@ -486,6 +525,7 @@ export default function ExploreScreen() {
               placeholderTextColor={colors.muted}
               value={searchQuery}
               onChangeText={setSearchQuery}
+              onFocus={hapticLight}
               returnKeyType="search"
               autoCorrect={false}
               autoCapitalize="none"
@@ -496,27 +536,31 @@ export default function ExploreScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="Clear search"
                 hitSlop={8}
-                onPress={() => setSearchQuery('')}>
+                onPress={() => {
+                  hapticLight();
+                  setSearchQuery('');
+                }}>
                 <MaterialIcons name="close" size={18} color={colors.muted} />
               </Pressable>
             ) : null}
           </View>
-          <View style={styles.topActions}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Notifications"
-              hitSlop={8}
-              onPress={() => router.push('/notifications')}
-              style={({ pressed }) => [
-                styles.headerButton,
-                { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.72 : 1 },
-              ]}>
-              <MaterialIcons name="notifications-none" size={21} color={colors.ink} />
-              {hasUnreadNotifications ? (
-                <View style={[styles.unreadDot, { borderColor: colors.surface }]} />
-              ) : null}
-            </Pressable>
-          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Notifications"
+            hitSlop={8}
+            onPress={() => {
+              hapticLight();
+              router.push('/notifications');
+            }}
+            style={({ pressed }) => [
+              styles.headerButton,
+              { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.72 : 1 },
+            ]}>
+            <MaterialIcons name="notifications-none" size={21} color={colors.ink} />
+            {hasUnreadNotifications ? (
+              <View style={[styles.unreadDot, { borderColor: colors.surface }]} />
+            ) : null}
+          </Pressable>
         </View>
       </Animated.View>
     </SafeAreaView>
@@ -1169,49 +1213,77 @@ const styles = StyleSheet.create({
     paddingBottom: 2,
   },
   programmeCard: {
-    width: 268,
+    width: 220,
+    height: 200,
     overflow: 'hidden',
     borderRadius: 16,
     borderWidth: 1,
   },
+  programmeMedia: {
+    flex: 1,
+    position: 'relative',
+  },
   programmeImage: {
     width: '100%',
-    height: 118,
+    height: '100%',
   },
-  programmeBody: {
-    minHeight: 132,
-    padding: 15,
-  },
-  programmeLabelRow: {
+  programmeCategoryChip: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    zIndex: 2,
+    maxWidth: '78%',
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 7,
+    gap: 5,
+  },
+  programmeScrim: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 112,
+    zIndex: 1,
+  },
+  programmeOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 2,
+    paddingHorizontal: 12,
+    paddingBottom: 12,
   },
   programmeDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   programmeCategory: {
     flexShrink: 1,
     fontFamily: fonts.medium,
     fontSize: 10,
+    textTransform: 'capitalize',
   },
   programmeTitle: {
-    marginTop: 8,
     fontFamily: fonts.bold,
-    fontSize: 17,
-    lineHeight: 22,
+    fontSize: 15,
+    lineHeight: 19,
+    color: '#F4F4F5',
   },
   textLink: {
-    marginTop: 14,
+    marginTop: 6,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 5,
   },
   textLinkLabel: {
     fontFamily: fonts.semibold,
-    fontSize: 12,
+    fontSize: 11,
+    color: '#F4F4F5',
   },
   opportunityList: {
     overflow: 'hidden',

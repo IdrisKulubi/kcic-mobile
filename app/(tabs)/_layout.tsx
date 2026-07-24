@@ -26,7 +26,7 @@ const TAB_ITEMS: (GlassTabItem & { href: string })[] = [
   { name: 'index', href: '/', label: 'For You', icon: 'sparkles' },
   { name: 'podcasts', href: '/podcasts', label: 'Media', icon: 'play.rectangle.fill' },
   { name: 'saved', href: '/saved', label: 'Saved', icon: 'bookmark.fill' },
-  { name: 'profile', href: '/profile', label: 'Profile', icon: 'person.crop.circle.fill' },
+  { name: 'events', href: '/events', label: 'Events', icon: 'calendar' },
 ];
 
 export default function TabLayout() {
