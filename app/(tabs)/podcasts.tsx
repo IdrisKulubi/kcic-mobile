@@ -1,18 +1,15 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Image } from 'expo-image';
 import * as WebBrowser from 'expo-web-browser';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { AppScreen, Card, Pill, TopBar, palette } from '@/components/kcic/ui';
-import { usePrototype } from '@/context/prototype-context';
+import { AppScreen, Card, Pill, palette } from '@/components/kcic/ui';
 import { getPodcast, podcasts, type Podcast } from '@/data/kcic';
 
 export default function PodcastsScreen() {
-  const router = useRouter();
   const { episode } = useLocalSearchParams<{ episode?: string }>();
-  const { hasUnreadNotifications } = usePrototype();
   const [selectedPodcast, setSelectedPodcast] = useState<Podcast>(podcasts[0]);
 
   useEffect(() => {
@@ -34,12 +31,6 @@ export default function PodcastsScreen() {
 
   return (
     <AppScreen>
-      <TopBar
-        hasUnread={hasUnreadNotifications}
-        onPressNotifications={() => router.push('/notifications')}
-        onPressAvatar={() => router.push('/profile')}
-      />
-
       <Text style={styles.eyebrow}>Listen & Watch</Text>
       <Text style={styles.title}>Podcasts</Text>
       <Text style={styles.intro}>

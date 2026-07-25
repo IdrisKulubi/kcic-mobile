@@ -1,10 +1,8 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { AppScreen, Card, SectionTitle, TopBar, palette } from '@/components/kcic/ui';
-import { usePrototype } from '@/context/prototype-context';
+import { AppScreen, Card, SectionTitle, palette } from '@/components/kcic/ui';
 import { events as seedEvents } from '@/data/kcic';
 import { openContent } from '@/lib/navigation';
 import { fonts } from '@/lib/typography';
@@ -34,17 +32,8 @@ const dummyEvents = [
 ];
 
 export default function EventsScreen() {
-  const router = useRouter();
-  const { hasUnreadNotifications } = usePrototype();
-
   return (
     <AppScreen>
-      <TopBar
-        hasUnread={hasUnreadNotifications}
-        onPressNotifications={() => router.push('/notifications')}
-        onPressAvatar={() => router.push('/profile')}
-      />
-
       <View style={styles.header}>
         <Text style={styles.title}>Events</Text>
         <Text style={styles.intro}>

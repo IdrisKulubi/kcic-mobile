@@ -16,6 +16,7 @@ import {
 import Animated from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useOptionalGlobalHeader } from '@/context/global-header-context';
 import { TAB_SCREEN_BOTTOM_INSET } from '@/lib/tab-bar-layout';
 
 export const palette = {
@@ -58,15 +59,22 @@ export function AppScreen({
   backgroundColor?: string;
   keyboardShouldPersistTaps?: 'always' | 'never' | 'handled';
 }) {
-  const onScroll = useMinimizeOnScroll();
+  const globalHeader = useOptionalGlobalHeader();
+  const fallbackOnScroll = useMinimizeOnScroll();
+  const onScroll = globalHeader?.onScroll ?? fallbackOnScroll;
+  const safeAreaEdges = globalHeader ? (['left', 'right'] as const) : (['top', 'left', 'right'] as const);
 
   return (
     <SafeAreaView
       style={[styles.safeArea, backgroundColor ? { backgroundColor } : null]}
-      edges={['top', 'left', 'right']}>
+      edges={safeAreaEdges}>
       <Animated.ScrollView
         style={[styles.scroll, backgroundColor ? { backgroundColor } : null]}
-        contentContainerStyle={[styles.content, padded ? styles.padded : null]}
+        contentContainerStyle={[
+          styles.content,
+          padded ? styles.padded : null,
+          globalHeader ? { paddingTop: globalHeader.contentTopPadding } : null,
+        ]}
         showsVerticalScrollIndicator={false}
         onScroll={onScroll}
         scrollEventThrottle={16}

@@ -18,7 +18,9 @@ import {
 } from 'expo-glass-tabs';
 
 import { AskKcicFab } from '@/components/kcic/ask-kcic-fab';
+import { GlobalAppHeader } from '@/components/kcic/global-app-header';
 import { palette } from '@/components/kcic/ui';
+import { GlobalHeaderProvider } from '@/context/global-header-context';
 import { TAB_BAR_FLOAT_OFFSET } from '@/lib/tab-bar-layout';
 
 const TAB_ITEMS: (GlassTabItem & { href: string })[] = [
@@ -63,25 +65,28 @@ export default function TabLayout() {
 
   return (
     <TabBarMinimizeProvider>
-      <View style={{ flex: 1 }}>
-        <Tabs>
-          <TabSlot style={{ height: '100%' }} renderFn={renderFadingTabScreen} />
-          <TabList asChild>
-            <GlassTabBar
-              theme={glassTheme}
-              floatOffset={TAB_BAR_FLOAT_OFFSET}
-              haptics
-              onIndexSelected={(index) => router.navigate(TAB_ITEMS[index].href as never)}>
-              {TAB_ITEMS.map(({ href, ...item }, index) => (
-                <TabTrigger key={item.name} name={item.name} href={href as never} asChild>
-                  <GlassTabButton item={item} index={index} />
-                </TabTrigger>
-              ))}
-            </GlassTabBar>
-          </TabList>
-        </Tabs>
-        <AskKcicFab />
-      </View>
+      <GlobalHeaderProvider>
+        <View style={{ flex: 1 }}>
+          <Tabs>
+            <TabSlot style={{ height: '100%' }} renderFn={renderFadingTabScreen} />
+            <TabList asChild>
+              <GlassTabBar
+                theme={glassTheme}
+                floatOffset={TAB_BAR_FLOAT_OFFSET}
+                haptics
+                onIndexSelected={(index) => router.navigate(TAB_ITEMS[index].href as never)}>
+                {TAB_ITEMS.map(({ href, ...item }, index) => (
+                  <TabTrigger key={item.name} name={item.name} href={href as never} asChild>
+                    <GlassTabButton item={item} index={index} />
+                  </TabTrigger>
+                ))}
+              </GlassTabBar>
+            </TabList>
+          </Tabs>
+          <GlobalAppHeader />
+          <AskKcicFab />
+        </View>
+      </GlobalHeaderProvider>
     </TabBarMinimizeProvider>
   );
 }

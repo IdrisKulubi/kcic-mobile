@@ -4,18 +4,28 @@ import { Pressable, StyleSheet, Text } from 'react-native';
 
 import { palette } from '@/components/kcic/ui';
 
-export function HeaderBackButton({ label = 'Back' }: { label?: string }) {
+export function HeaderBackButton({
+  label = 'Back',
+  tone = 'dark',
+  onPress,
+}: {
+  label?: string;
+  tone?: 'dark' | 'light';
+  onPress?: () => void;
+}) {
   const router = useRouter();
+  const iconColor = tone === 'light' ? '#F4F4F5' : palette.forest;
+  const showLabel = tone === 'dark' && label;
 
   return (
     <Pressable
-      onPress={() => router.back()}
+      onPress={onPress ?? (() => router.back())}
       style={styles.wrap}
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel={label}>
-      <MaterialIcons name="arrow-back" size={24} color={palette.forest} />
-      {label ? <Text style={styles.label}>{label}</Text> : null}
+      <MaterialIcons name="arrow-back" size={24} color={iconColor} />
+      {showLabel ? <Text style={styles.label}>{label}</Text> : null}
     </Pressable>
   );
 }

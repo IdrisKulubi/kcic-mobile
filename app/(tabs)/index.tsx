@@ -12,24 +12,16 @@ import {
   ImageHeader,
   Pill,
   PrimaryButton,
-  SearchField,
   SectionTitle,
-  TopBar,
   palette,
 } from '@/components/kcic/ui';
-import { usePrototype } from '@/context/prototype-context';
-import {
-  events,
-  homeCategoryFilters,
-  podcasts,
-} from '@/data/kcic';
 import { ContentMessage, ContentSkeleton } from '@/components/kcic/content-state';
 import { useContent } from '@/context/content-context';
+import { events, homeCategoryFilters, podcasts } from '@/data/kcic';
 import { formatContentDate } from '@/lib/content-api';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { hasUnreadNotifications } = usePrototype();
   const { articles, opportunities, loading, refreshing, error, refresh } = useContent();
   const [activeFilter, setActiveFilter] = useState(homeCategoryFilters[0].value);
 
@@ -47,19 +39,10 @@ export default function HomeScreen() {
 
   return (
     <AppScreen refreshing={refreshing} onRefresh={() => void refresh()}>
-      <TopBar
-        showProfileAvatar
-        hasUnread={hasUnreadNotifications}
-        onPressNotifications={() => router.push('/notifications')}
-        onPressAvatar={() => router.push('/profile')}
-      />
-
       <View style={styles.hero}>
         <Text style={styles.greeting}>Good morning, Idris</Text>
         <Text style={styles.subtitle}>Today in Climate Innovation</Text>
       </View>
-
-      <SearchField placeholder="Search reports, news, policies..." onPress={() => router.push('/search')} />
 
       <View style={styles.pillRow}>
         {homeCategoryFilters.map((filter, index) => (

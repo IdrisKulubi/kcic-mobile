@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { showOpenResource } from '@/components/kcic/feedback';
-import { AppScreen, Card, PrimaryButton, SectionTitle, TopBar, palette } from '@/components/kcic/ui';
+import { AppScreen, Card, PrimaryButton, SectionTitle, palette } from '@/components/kcic/ui';
 import { usePrototype } from '@/context/prototype-context';
 import { resolveBookmark, type BookmarkType } from '@/data/kcic';
 import { useContent } from '@/context/content-context';
@@ -23,7 +23,7 @@ function bookmarkTypeLabel(type: SavedType) {
 
 export default function SavedScreen() {
   const router = useRouter();
-  const { bookmarks, hasUnreadNotifications, toggleBookmark } = usePrototype();
+  const { bookmarks, toggleBookmark } = usePrototype();
   const { articles, programmes, opportunities } = useContent();
 
   const savedItems = useMemo(
@@ -75,12 +75,6 @@ export default function SavedScreen() {
 
   return (
     <AppScreen>
-      <TopBar
-        hasUnread={hasUnreadNotifications}
-        onPressNotifications={() => router.push('/notifications')}
-        onPressAvatar={() => router.push('/profile')}
-      />
-
       <Text style={styles.eyebrow}>Your collection</Text>
       <Text style={styles.title}>Saved</Text>
       <Text style={styles.intro}>

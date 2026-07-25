@@ -6,6 +6,8 @@ import { Linking, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'r
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { showRsvpSuccess } from '@/components/kcic/feedback';
+import { ArticleDetailScreen } from '@/components/kcic/article-detail-screen';
+import { ArticleDetailSkeleton } from '@/components/kcic/article-detail-skeleton';
 import { PrimaryButton, palette } from '@/components/kcic/ui';
 import { ContentMessage, ContentSkeleton } from '@/components/kcic/content-state';
 import { RichText } from '@/components/kcic/rich-text';
@@ -155,6 +157,15 @@ function LiveContentDetail({
   }, [slugOrId, type]);
 
   if (loading) {
+    if (type === 'article') {
+      return (
+        <>
+          <Stack.Screen options={{ headerShown: false }} />
+          <ArticleDetailSkeleton />
+        </>
+      );
+    }
+
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.stateBody}>
@@ -177,35 +188,39 @@ function LiveContentDetail({
   const article = type === 'article' ? (item as NewsArticle) : null;
   const programme = type === 'programme' ? (item as Programme) : null;
   const opportunity = type === 'opportunity' ? (item as Opportunity) : null;
-  const image = article
-    ? resolveContentImageUrl(article.thumbnail)
-    : programme
-      ? getProgrammeImage(programme)
-      : undefined;
-  const summary = article?.excerpt ?? programme?.description ?? opportunity?.summary ?? '';
   const bookmark = bookmarkKey(
     'article',
     type === 'article' ? slugOrId : `${type}:${slugOrId}`
   );
   const bookmarked = isBookmarked(bookmark);
   const title = item.title;
-  const meta = article
-    ? `${article.category} · ${formatContentDate(article.publishedAt)} · ${article.readTime ?? 'Article'}`
-    : programme
-      ? programme.category
-      : [
-          opportunity?.type,
-          opportunity?.location,
-          formatContentDate(opportunity?.deadline ?? null),
-        ]
-          .filter(Boolean)
-          .join(' · ');
+
+  if (article) {
+    return (
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <ArticleDetailScreen
+          article={article}
+          bookmarked={bookmarked}
+          onToggleBookmark={() => toggleBookmark(bookmark)}
+        />
+      </>
+    );
+  }
+
+  const summary = programme?.description ?? opportunity?.summary ?? '';
+  const image = programme ? getProgrammeImage(programme) : undefined;
+  const meta = programme
+    ? programme.category
+    : [opportunity?.type, opportunity?.location, formatContentDate(opportunity?.deadline ?? null)]
+        .filter(Boolean)
+        .join(' · ');
 
   return (
     <>
       <Stack.Screen
         options={{
-          title: type === 'article' ? 'Insight' : type === 'programme' ? 'Programme' : 'Opportunity',
+          title: type === 'programme' ? 'Programme' : 'Opportunity',
           headerBackVisible: false,
         }}
       />
@@ -230,8 +245,6 @@ function LiveContentDetail({
               onPress={() => void Share.share({ title, message: `${title}\n\n${summary}` })}
             />
           </View>
-
-          {article ? <RichText html={article.content} /> : null}
 
           {programme ? (
             <>

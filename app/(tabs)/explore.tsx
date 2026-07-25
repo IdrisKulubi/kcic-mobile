@@ -2,7 +2,6 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
-import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
   Pressable,
@@ -11,15 +10,15 @@ import {
   Share,
   StyleSheet,
   Text,
-  TextInput,
   useColorScheme,
   View,
 } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { palette } from '@/components/kcic/ui';
 import { useContent } from '@/context/content-context';
+import { useGlobalHeader } from '@/context/global-header-context';
 import { usePrototype } from '@/context/prototype-context';
 import { bookmarkKey, insightFilters } from '@/data/kcic';
 import { formatContentDate, getProgrammeImage, type NewsArticle } from '@/lib/content-api';
@@ -33,11 +32,6 @@ import { openContent, openPodcastEpisode } from '@/lib/navigation';
 import { hapticLight, hapticSelection } from '@/lib/haptics';
 import { TAB_SCREEN_BOTTOM_INSET } from '@/lib/tab-bar-layout';
 import { fonts } from '@/lib/typography';
-import {
-  useCollapsingHeaderScroll,
-  EXPLORE_HEADER_BAR_HEIGHT,
-  EXPLORE_HEADER_BOTTOM_GAP,
-} from '@/lib/use-collapsing-header-scroll';
 
 type ExploreSection = 'all' | 'opportunities' | 'insights' | 'programmes';
 
@@ -84,17 +78,15 @@ const exploreThemes = {
 } as const;
 
 export default function ExploreScreen() {
-  const router = useRouter();
   const isDark = useColorScheme() === 'dark';
   const colors = isDark ? exploreThemes.dark : exploreThemes.light;
-  const { hasUnreadNotifications, toggleBookmark, isBookmarked } = usePrototype();
+  const { toggleBookmark, isBookmarked } = usePrototype();
   const { articles, programmes, opportunities, loading, refreshing, error, refresh } = useContent();
+  const { searchQuery, setSearchQuery, isSearching, onScroll, contentTopPadding } = useGlobalHeader();
   const [activeSection, setActiveSection] = useState<ExploreSection>('all');
   const [activeInsightFilter, setActiveInsightFilter] = useState(insightFilters[0].value);
-  const [searchQuery, setSearchQuery] = useState('');
 
   const trimmedSearchQuery = searchQuery.trim();
-  const isSearching = trimmedSearchQuery.length > 0;
   const searchResults = useMemo(
     () => buildContentSearchResults(trimmedSearchQuery, articles, programmes, opportunities),
     [articles, opportunities, programmes, trimmedSearchQuery]
@@ -131,10 +123,6 @@ export default function ExploreScreen() {
     });
   };
 
-  const insets = useSafeAreaInsets();
-  const headerHideDistance = insets.top + EXPLORE_HEADER_BAR_HEIGHT + EXPLORE_HEADER_BOTTOM_GAP + 12;
-  const { onScroll, headerStyle } = useCollapsingHeaderScroll(isSearching, headerHideDistance);
-
   return (
     <SafeAreaView
       style={[styles.exploreScreen, { backgroundColor: colors.background }]}
@@ -145,7 +133,7 @@ export default function ExploreScreen() {
         style={[styles.exploreScroll, { backgroundColor: colors.background }]}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingTop: insets.top + EXPLORE_HEADER_BAR_HEIGHT + EXPLORE_HEADER_BOTTOM_GAP },
+          { paddingTop: contentTopPadding },
         ]}
         showsVerticalScrollIndicator={false}
         onScroll={onScroll}
@@ -247,7 +235,7 @@ export default function ExploreScreen() {
         />
       ) : null}
 
-      {!loading && featuredOpportunity && showOpportunities ? (
+      {/* {!loading && featuredOpportunity && showOpportunities ? (
         <View style={styles.section}>
           <SectionHeading
             title="Opportunity spotlight"
@@ -301,7 +289,7 @@ export default function ExploreScreen() {
             </View>
           </Pressable>
         </View>
-      ) : null}
+      ) : null} */}
 
       {!loading && showInsights && articles.length > 0 ? (
         <View style={styles.section}>
@@ -496,73 +484,6 @@ export default function ExploreScreen() {
         </>
       )}
       </Animated.ScrollView>
-
-      <Animated.View pointerEvents="box-none" style={[styles.floatingHeader, { paddingTop: insets.top }, headerStyle]}>
-        <View style={styles.topBar}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Profile"
-            hitSlop={8}
-            onPress={() => {
-              hapticLight();
-              router.push('/profile');
-            }}
-            style={({ pressed }) => [
-              styles.headerButton,
-              { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.72 : 1 },
-            ]}>
-            <MaterialIcons name="person-outline" size={21} color={colors.ink} />
-          </Pressable>
-          <View
-            style={[
-              styles.headerSearchBar,
-              { backgroundColor: colors.surface, borderColor: colors.border },
-            ]}>
-            <MaterialIcons name="search" size={18} color={colors.muted} />
-            <TextInput
-              style={[styles.headerSearchInput, { color: colors.ink }]}
-              placeholder="Search programmes, insights..."
-              placeholderTextColor={colors.muted}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              onFocus={hapticLight}
-              returnKeyType="search"
-              autoCorrect={false}
-              autoCapitalize="none"
-              accessibilityLabel="Search KCIC content"
-            />
-            {searchQuery.length > 0 ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Clear search"
-                hitSlop={8}
-                onPress={() => {
-                  hapticLight();
-                  setSearchQuery('');
-                }}>
-                <MaterialIcons name="close" size={18} color={colors.muted} />
-              </Pressable>
-            ) : null}
-          </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Notifications"
-            hitSlop={8}
-            onPress={() => {
-              hapticLight();
-              router.push('/notifications');
-            }}
-            style={({ pressed }) => [
-              styles.headerButton,
-              { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.72 : 1 },
-            ]}>
-            <MaterialIcons name="notifications-none" size={21} color={colors.ink} />
-            {hasUnreadNotifications ? (
-              <View style={[styles.unreadDot, { borderColor: colors.surface }]} />
-            ) : null}
-          </Pressable>
-        </View>
-      </Animated.View>
     </SafeAreaView>
   );
 }
@@ -849,71 +770,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 18,
     paddingBottom: TAB_SCREEN_BOTTOM_INSET,
-  },
-  floatingHeader: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-    paddingHorizontal: 18,
-    paddingBottom: EXPLORE_HEADER_BOTTOM_GAP,
-  },
-  topBar: {
-    minHeight: EXPLORE_HEADER_BAR_HEIGHT,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  logo: {
-    width: 64,
-    height: 36,
-  },
-  headerSearchBar: {
-    flex: 1,
-    minHeight: 40,
-    borderRadius: 20,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  headerSearchInput: {
-    flex: 1,
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    paddingVertical: 8,
-  },
-  topActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 9,
-  },
-  headerButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  profileButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  unreadDot: {
-    position: 'absolute',
-    top: 7,
-    right: 7,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: palette.brown,
-    borderWidth: 1.5,
   },
   heroCopy: {
     maxWidth: 420,
