@@ -16,7 +16,6 @@ import {
   type GlassTabItem,
 } from 'expo-glass-tabs';
 
-import { AskKcicFab } from '@/components/kcic/ask-kcic-fab';
 import { GlobalAppHeader } from '@/components/kcic/global-app-header';
 import { palette } from '@/components/kcic/ui';
 import { GlobalHeaderProvider } from '@/context/global-header-context';
@@ -85,7 +84,6 @@ export default function TabLayout() {
             </TabList>
           </Tabs>
           <GlobalAppHeader />
-          <AskKcicFab />
         </View>
         </MediaPlayerProvider>
       </GlobalHeaderProvider>

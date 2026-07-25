@@ -1,177 +1,238 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
-import { useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { useEffect, useMemo, useState } from 'react';
+import { Pressable, StyleSheet, Text, useColorScheme, View } from 'react-native';
+import Animated from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { showOpenResource } from '@/components/kcic/feedback';
-import { AppScreen, Card, PrimaryButton, SectionTitle, palette } from '@/components/kcic/ui';
-import { usePrototype } from '@/context/prototype-context';
-import { resolveBookmark, type BookmarkType } from '@/data/kcic';
+import { SavedFilterChips } from '@/components/kcic/saved-filter-chips';
+import { SavedItemCard } from '@/components/kcic/saved-item-card';
+import { SavedListSkeleton } from '@/components/kcic/saved-list-skeleton';
+import { palette } from '@/components/kcic/ui';
 import { useContent } from '@/context/content-context';
+import { useGlobalHeader } from '@/context/global-header-context';
 import { useMedia } from '@/context/media-context';
-import { openContent, openPodcastEpisode } from '@/lib/navigation';
+import { useMediaPlayer } from '@/context/media-player-context';
+import { usePrototype } from '@/context/prototype-context';
+import { hapticLight } from '@/lib/haptics';
+import { openSavedItem } from '@/lib/open-saved-item';
+import {
+  countSavedByFilter,
+  filterSavedItems,
+  resolveSavedItems,
+  type SavedFilter,
+} from '@/lib/resolve-saved-items';
+import { TAB_SCREEN_BOTTOM_INSET } from '@/lib/tab-bar-layout';
+import { fonts } from '@/lib/typography';
 
-type SavedType = BookmarkType | 'programme' | 'opportunity';
-
-function bookmarkTypeLabel(type: SavedType) {
-  if (type === 'article') return 'Insight';
-  if (type === 'programme') return 'Programme';
-  if (type === 'opportunity') return 'Opportunity';
-  if (type === 'story') return 'Story';
-  if (type === 'event') return 'Event';
-  if (type === 'podcast') return 'Media';
-  return 'Resource';
-}
+const savedThemes = {
+  light: {
+    background: '#F5F5F6',
+    surface: '#FFFFFF',
+    surfaceAlt: '#EEEFF0',
+    ink: '#3F4042',
+    muted: '#65676A',
+    border: '#DFE0E1',
+    accentSoft: '#EDF8FC',
+    activeText: '#303133',
+    imageShade: 'rgba(34, 35, 37, 0.18)',
+  },
+  dark: {
+    background: '#151617',
+    surface: '#202123',
+    surfaceAlt: '#292A2C',
+    ink: '#F4F4F5',
+    muted: '#B4B5B7',
+    border: '#38393B',
+    accentSoft: '#1E2A33',
+    activeText: '#303133',
+    imageShade: 'rgba(15, 16, 17, 0.42)',
+  },
+} as const;
 
 export default function SavedScreen() {
   const router = useRouter();
+  const isDark = useColorScheme() === 'dark';
+  const colors = isDark ? savedThemes.dark : savedThemes.light;
+  const { onScroll, contentTopPadding } = useGlobalHeader();
   const { bookmarks, toggleBookmark } = usePrototype();
-  const { articles, programmes, opportunities } = useContent();
-  const { getItemById } = useMedia();
+  const { articles, programmes, opportunities, loading: contentLoading } = useContent();
+  const { getItemById, loading: mediaLoading } = useMedia();
+  const { play } = useMediaPlayer();
+  const [activeFilter, setActiveFilter] = useState<SavedFilter>('all');
 
   const savedItems = useMemo(
     () =>
-      Array.from(bookmarks)
-        .map((key) => {
-          if (key.startsWith('podcast:')) {
-            const id = key.slice('podcast:'.length);
-            const mediaItem = getItemById(id);
-            if (mediaItem) {
-              return {
-                key,
-                type: 'podcast' as const,
-                id,
-                title: mediaItem.title,
-                subtitle: mediaItem.kind === 'podcast' ? 'Podcast' : 'Video',
-                icon: 'podcasts' as const,
-              };
-            }
-          }
-          if (key.startsWith('article:programme:')) {
-            const slug = key.slice('article:programme:'.length);
-            const item = programmes.find((programme) => programme.slug === slug);
-            return item
-              ? { key, type: 'programme' as const, id: slug, title: item.title, subtitle: item.category, icon: 'account-balance' as const }
-              : null;
-          }
-          if (key.startsWith('article:opportunity:')) {
-            const slug = key.slice('article:opportunity:'.length);
-            const item = opportunities.find((opportunity) => opportunity.slug === slug);
-            return item
-              ? { key, type: 'opportunity' as const, id: slug, title: item.title, subtitle: item.type, icon: 'work-outline' as const }
-              : null;
-          }
-          if (key.startsWith('article:')) {
-            const slug = key.slice('article:'.length);
-            const item = articles.find((article) => article.slug === slug);
-            if (item) {
-              return {
-                key,
-                type: 'article' as const,
-                id: slug,
-                title: item.title,
-                subtitle: item.category,
-                icon: 'article' as const,
-              };
-            }
-          }
-          return resolveBookmark(key);
-        })
-        .filter((item): item is NonNullable<typeof item> => item !== null),
+      resolveSavedItems({
+        bookmarks,
+        articles,
+        programmes,
+        opportunities,
+        getItemById,
+      }),
     [articles, bookmarks, getItemById, opportunities, programmes]
   );
 
-  const handleOpen = (type: SavedType, id: string, title: string, detail: string) => {
-    if (type === 'resource') {
-      showOpenResource(title, detail);
-      return;
-    }
+  const counts = useMemo(() => countSavedByFilter(savedItems), [savedItems]);
+  const filteredItems = useMemo(
+    () => filterSavedItems(savedItems, activeFilter),
+    [activeFilter, savedItems]
+  );
 
-    if (type === 'podcast') {
-      openPodcastEpisode(id);
-      return;
-    }
+  const isLoading =
+    bookmarks.size > 0 && (contentLoading || mediaLoading) && savedItems.length === 0;
 
-    openContent(type, id);
-  };
+  useEffect(() => {
+    if (activeFilter !== 'all' && counts[activeFilter] === 0) {
+      setActiveFilter('all');
+    }
+  }, [activeFilter, counts]);
+
+  const subtitle =
+    savedItems.length === 0
+      ? 'Bookmark insights, programmes, media, and more for quick access.'
+      : `${savedItems.length} saved item${savedItems.length === 1 ? '' : 's'}`;
 
   return (
-    <AppScreen>
-      <Text style={styles.eyebrow}>Your collection</Text>
-      <Text style={styles.title}>Saved</Text>
-      <Text style={styles.intro}>
-        Articles, stories, events, and resources you bookmark across KCIC Climate Hub.
-      </Text>
+    <SafeAreaView
+      style={[styles.screen, { backgroundColor: colors.background }]}
+      edges={['left', 'right']}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
-      {savedItems.length === 0 ? (
-        <Card style={styles.emptyCard}>
-          <View style={styles.emptyIcon}>
-            <MaterialIcons name="bookmark-border" size={28} color={palette.green} />
-          </View>
-          <Text style={styles.emptyTitle}>Nothing saved yet</Text>
-          <Text style={styles.emptyBody}>
-            Tap the bookmark icon on insights, stories, events, or resources to keep them here for quick
-            access.
-          </Text>
-          <PrimaryButton label="Browse Library" onPress={() => router.push('/library')} />
-        </Card>
-      ) : (
-        <Card style={styles.listCard}>
-          <SectionTitle title={`${savedItems.length} saved item${savedItems.length === 1 ? '' : 's'}`} />
-          {savedItems.map((item) => (
+      <Animated.ScrollView
+        style={[styles.scroll, { backgroundColor: colors.background }]}
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: contentTopPadding, paddingBottom: TAB_SCREEN_BOTTOM_INSET + 72 },
+        ]}
+        showsVerticalScrollIndicator={false}
+        onScroll={onScroll}
+        scrollEventThrottle={16}>
+        <Text style={[styles.title, { color: colors.ink }]}>Saved</Text>
+        <Text style={[styles.subtitle, { color: colors.muted }]}>{subtitle}</Text>
+
+        {savedItems.length > 0 ? (
+          <SavedFilterChips
+            active={activeFilter}
+            onChange={(filter) => {
+              hapticLight();
+              setActiveFilter(filter);
+            }}
+            counts={counts}
+            colors={{
+              surface: colors.surface,
+              ink: colors.ink,
+              muted: colors.muted,
+              border: colors.border,
+              activeText: colors.activeText,
+            }}
+          />
+        ) : null}
+
+        {isLoading ? (
+          <SavedListSkeleton
+            colors={{
+              surface: colors.surface,
+              border: colors.border,
+              surfaceAlt: colors.surfaceAlt,
+            }}
+          />
+        ) : null}
+
+        {!isLoading && savedItems.length === 0 ? (
+          <View style={[styles.emptyCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={[styles.emptyIcon, { backgroundColor: colors.accentSoft }]}>
+              <MaterialIcons name="bookmark-border" size={28} color={palette.green} />
+            </View>
+            <Text style={[styles.emptyTitle, { color: colors.ink }]}>Nothing saved yet</Text>
+            <Text style={[styles.emptyBody, { color: colors.muted }]}>
+              Tap the bookmark icon on insights, programmes, media, and more to keep them here.
+            </Text>
             <Pressable
-              key={item.key}
-              style={styles.savedRow}
-              onPress={() => handleOpen(item.type, item.id, item.title, item.subtitle)}
-              accessibilityRole="button">
-              <View style={styles.savedIcon}>
-                <MaterialIcons name={item.icon} size={22} color={palette.blue} />
-              </View>
-              <View style={styles.savedText}>
-                <Text style={styles.savedType}>{bookmarkTypeLabel(item.type)}</Text>
-                <Text style={styles.savedTitle}>{item.title}</Text>
-                <Text style={styles.savedSubtitle}>{item.subtitle}</Text>
-              </View>
-              <Pressable
-                onPress={() => toggleBookmark(item.key)}
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel={`Remove ${item.title} from saved`}>
-                <MaterialIcons name="bookmark" size={22} color={palette.green} />
-              </Pressable>
+              accessibilityRole="button"
+              onPress={() => {
+                hapticLight();
+                router.push('/explore');
+              }}
+              style={({ pressed }) => [
+                styles.emptyCta,
+                { backgroundColor: palette.green, opacity: pressed ? 0.76 : 1 },
+              ]}>
+              <Text style={styles.emptyCtaText}>Browse Explore</Text>
             </Pressable>
-          ))}
-        </Card>
-      )}
-    </AppScreen>
+          </View>
+        ) : null}
+
+        {!isLoading && savedItems.length > 0 && filteredItems.length === 0 ? (
+          <View style={[styles.emptyCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <MaterialIcons name="filter-list-off" size={24} color={palette.blue} />
+            <Text style={[styles.emptyTitle, { color: colors.ink }]}>No items in this filter</Text>
+            <Text style={[styles.emptyBody, { color: colors.muted }]}>
+              Try another category or save more content from across the app.
+            </Text>
+          </View>
+        ) : null}
+
+        {filteredItems.map((item) => (
+          <SavedItemCard
+            key={item.key}
+            item={item}
+            colors={{
+              surface: colors.surface,
+              ink: colors.ink,
+              muted: colors.muted,
+              border: colors.border,
+              accentSoft: colors.accentSoft,
+              imageShade: colors.imageShade,
+            }}
+            onPress={() =>
+              openSavedItem(item, {
+                getMediaItem: getItemById,
+                playMedia: play,
+              })
+            }
+            onRemove={() => {
+              hapticLight();
+              toggleBookmark(item.key);
+            }}
+          />
+        ))}
+      </Animated.ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  eyebrow: {
-    color: palette.limeDark,
-    fontSize: 12,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+  screen: {
+    flex: 1,
+  },
+  scroll: {
+    flex: 1,
+  },
+  content: {
+    paddingHorizontal: 18,
   },
   title: {
-    color: palette.ink,
-    fontSize: 38,
-    lineHeight: 42,
-    fontWeight: '900',
-    marginTop: 8,
+    fontFamily: fonts.bold,
+    fontSize: 34,
+    lineHeight: 38,
+    marginBottom: 6,
   },
-  intro: {
-    color: palette.slate,
-    fontSize: 15,
-    lineHeight: 23,
-    marginTop: 12,
-    marginBottom: 22,
+  subtitle: {
+    fontFamily: fonts.regular,
+    fontSize: 14,
+    lineHeight: 21,
+    marginBottom: 18,
   },
   emptyCard: {
+    marginTop: 8,
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 24,
+    paddingVertical: 32,
     alignItems: 'center',
-    gap: 12,
-    paddingVertical: 28,
+    gap: 10,
   },
   emptyIcon: {
     width: 56,
@@ -179,58 +240,31 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#E9F7DE',
     marginBottom: 4,
   },
   emptyTitle: {
-    color: palette.ink,
-    fontSize: 20,
-    fontWeight: '900',
+    fontFamily: fonts.bold,
+    fontSize: 18,
+    textAlign: 'center',
   },
   emptyBody: {
-    color: palette.slate,
-    fontSize: 14,
-    lineHeight: 21,
+    fontFamily: fonts.regular,
+    fontSize: 13,
+    lineHeight: 20,
     textAlign: 'center',
-    marginBottom: 8,
+    maxWidth: 300,
   },
-  listCard: {
-    gap: 4,
-  },
-  savedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    paddingVertical: 14,
-    borderTopWidth: 1,
-    borderTopColor: '#EEF2EC',
-  },
-  savedIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 8,
+  emptyCta: {
+    marginTop: 8,
+    minHeight: 42,
+    borderRadius: 10,
+    paddingHorizontal: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#EDF8FC',
   },
-  savedText: {
-    flex: 1,
-    gap: 2,
-  },
-  savedType: {
-    color: palette.limeDark,
-    fontSize: 11,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-  },
-  savedTitle: {
-    color: palette.ink,
-    fontSize: 14,
-    fontWeight: '900',
-  },
-  savedSubtitle: {
-    color: palette.slate,
-    fontSize: 12,
-    lineHeight: 18,
+  emptyCtaText: {
+    fontFamily: fonts.bold,
+    fontSize: 13,
+    color: '#303133',
   },
 });

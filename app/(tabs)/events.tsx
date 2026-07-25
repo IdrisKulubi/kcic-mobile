@@ -1,150 +1,122 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Image } from 'expo-image';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { StyleSheet, Text, useColorScheme, View } from 'react-native';
+import Animated from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AppScreen, Card, SectionTitle, palette } from '@/components/kcic/ui';
-import { events as seedEvents } from '@/data/kcic';
-import { openContent } from '@/lib/navigation';
+import { palette } from '@/components/kcic/ui';
+import { useGlobalHeader } from '@/context/global-header-context';
+import { TAB_SCREEN_BOTTOM_INSET } from '@/lib/tab-bar-layout';
 import { fonts } from '@/lib/typography';
 
-const dummyEvents = [
-  ...seedEvents,
-  {
-    id: 'climate-pitch-day',
-    type: 'Pitch Day',
-    title: 'KCIC Climate Venture Pitch Day',
-    date: 'Wed, Nov 12',
-    time: '2:00 PM EAT',
-    location: 'Nairobi Garage',
-    image:
-      'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=900&q=80',
+const eventsThemes = {
+  light: {
+    background: '#F5F5F6',
+    surface: '#FFFFFF',
+    ink: '#3F4042',
+    muted: '#65676A',
+    border: '#DFE0E1',
+    accentSoft: '#EDF8FC',
   },
-  {
-    id: 'circular-economy-forum',
-    type: 'Forum',
-    title: 'Circular Economy Innovation Forum',
-    date: 'Fri, Nov 21',
-    time: '9:30 AM EAT',
-    location: 'Hybrid',
-    image:
-      'https://images.unsplash.com/photo-1505373877841-8d25f39c4662?auto=format&fit=crop&w=900&q=80',
+  dark: {
+    background: '#151617',
+    surface: '#202123',
+    ink: '#F4F4F5',
+    muted: '#B4B5B7',
+    border: '#38393B',
+    accentSoft: '#1E2A33',
   },
-];
+} as const;
 
 export default function EventsScreen() {
-  return (
-    <AppScreen>
-      <View style={styles.header}>
-        <Text style={styles.title}>Events</Text>
-        <Text style={styles.intro}>
-          Workshops, expos, and networking sessions for climate innovators. Placeholder listings for now.
-        </Text>
-      </View>
+  const isDark = useColorScheme() === 'dark';
+  const colors = isDark ? eventsThemes.dark : eventsThemes.light;
+  const { onScroll, contentTopPadding } = useGlobalHeader();
 
-      <Card style={styles.section}>
-        <SectionTitle title="Upcoming" />
-        {dummyEvents.map((event, index) => (
-          <Pressable
-            key={event.id}
-            accessibilityRole="button"
-            onPress={() => openContent('event', event.id)}
-            style={({ pressed }) => [
-              styles.eventRow,
-              index < dummyEvents.length - 1 ? styles.eventRowBorder : null,
-              { opacity: pressed ? 0.76 : 1 },
-            ]}>
-            <Image source={{ uri: event.image }} style={styles.eventImage} contentFit="cover" />
-            <View style={styles.eventCopy}>
-              <Text style={styles.eventType}>{event.type}</Text>
-              <Text style={styles.eventTitle} numberOfLines={2}>
-                {event.title}
-              </Text>
-              <View style={styles.eventMeta}>
-                <MaterialIcons name="schedule" size={13} color={palette.slate} />
-                <Text style={styles.eventMetaText}>
-                  {event.date} · {event.time}
-                </Text>
-              </View>
-              <View style={styles.eventMeta}>
-                <MaterialIcons name="location-on" size={13} color={palette.slate} />
-                <Text style={styles.eventMetaText} numberOfLines={1}>
-                  {event.location}
-                </Text>
-              </View>
-            </View>
-            <MaterialIcons name="chevron-right" size={22} color={palette.slate} />
-          </Pressable>
-        ))}
-      </Card>
-    </AppScreen>
+  return (
+    <SafeAreaView
+      style={[styles.screen, { backgroundColor: colors.background }]}
+      edges={['left', 'right']}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+
+      <Animated.ScrollView
+        style={[styles.scroll, { backgroundColor: colors.background }]}
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: contentTopPadding, paddingBottom: TAB_SCREEN_BOTTOM_INSET + 72 },
+        ]}
+        showsVerticalScrollIndicator={false}
+        onScroll={onScroll}
+        scrollEventThrottle={16}>
+        <Text style={[styles.title, { color: colors.ink }]}>Events</Text>
+        <Text style={[styles.subtitle, { color: colors.muted }]}>
+          Workshops, expos, and networking sessions for climate innovators.
+        </Text>
+
+        <View style={[styles.emptyCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={[styles.emptyIcon, { backgroundColor: colors.accentSoft }]}>
+            <MaterialIcons name="event-busy" size={30} color={palette.blue} />
+          </View>
+          <Text style={[styles.emptyTitle, { color: colors.ink }]}>No upcoming events</Text>
+          <Text style={[styles.emptyBody, { color: colors.muted }]}>
+            There are no events scheduled right now. Check back soon for KCIC workshops, pitch days,
+            and networking sessions.
+          </Text>
+        </View>
+      </Animated.ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    marginBottom: 20,
+  screen: {
+    flex: 1,
+  },
+  scroll: {
+    flex: 1,
+  },
+  content: {
+    paddingHorizontal: 18,
   },
   title: {
-    fontFamily: fonts.extraBold,
-    fontSize: 32,
-    lineHeight: 36,
-    color: palette.ink,
-    letterSpacing: -0.4,
+    fontFamily: fonts.bold,
+    fontSize: 34,
+    lineHeight: 38,
+    marginBottom: 6,
   },
-  intro: {
-    marginTop: 8,
+  subtitle: {
     fontFamily: fonts.regular,
     fontSize: 14,
-    lineHeight: 20,
-    color: palette.slate,
-    maxWidth: 360,
+    lineHeight: 21,
+    marginBottom: 24,
+    maxWidth: 340,
   },
-  section: {
-    marginBottom: 22,
-  },
-  eventRow: {
-    flexDirection: 'row',
+  emptyCard: {
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 24,
+    paddingVertical: 36,
     alignItems: 'center',
-    gap: 12,
-    paddingVertical: 12,
+    gap: 10,
   },
-  eventRowBorder: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E8E8E9',
+  emptyIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
   },
-  eventImage: {
-    width: 72,
-    height: 72,
-    borderRadius: 12,
-    backgroundColor: palette.panel,
-  },
-  eventCopy: {
-    flex: 1,
-    minWidth: 0,
-    gap: 3,
-  },
-  eventType: {
-    fontFamily: fonts.semibold,
-    fontSize: 10,
-    color: palette.blue,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
-  eventTitle: {
+  emptyTitle: {
     fontFamily: fonts.bold,
-    fontSize: 14,
-    lineHeight: 18,
-    color: palette.ink,
+    fontSize: 18,
+    textAlign: 'center',
   },
-  eventMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  eventMetaText: {
-    flex: 1,
-    fontFamily: fonts.medium,
-    fontSize: 11,
-    color: palette.slate,
+  emptyBody: {
+    fontFamily: fonts.regular,
+    fontSize: 13,
+    lineHeight: 20,
+    textAlign: 'center',
+    maxWidth: 300,
   },
 });

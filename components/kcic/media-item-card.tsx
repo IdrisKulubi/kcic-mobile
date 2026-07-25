@@ -134,15 +134,16 @@ export function MediaListSkeleton({
 const styles = StyleSheet.create({
   card: {
     borderWidth: 1,
-    borderRadius: 4,
-    padding: 16,
-    marginBottom: 12,
+    borderRadius: 16,
+    padding: 12,
+    marginBottom: 10,
+    overflow: 'hidden',
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 14,
-    marginBottom: 12,
+    gap: 12,
+    marginBottom: 10,
   },
   title: {
     flex: 1,
@@ -154,7 +155,7 @@ const styles = StyleSheet.create({
   thumbnailWrap: {
     width: 88,
     height: 88,
-    borderRadius: 4,
+    borderRadius: 12,
     overflow: 'hidden',
     backgroundColor: '#D9D9D9',
   },
@@ -174,7 +175,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: 14,
     lineHeight: 21,
-    marginBottom: 14,
+    marginBottom: 10,
   },
   footer: {
     flexDirection: 'row',
@@ -200,9 +201,10 @@ const styles = StyleSheet.create({
   },
   skeletonCard: {
     borderWidth: 1,
-    borderRadius: 4,
-    padding: 16,
-    marginBottom: 12,
+    borderRadius: 16,
+    padding: 12,
+    marginBottom: 10,
+    overflow: 'hidden',
   },
   skeletonHeader: {
     flexDirection: 'row',
@@ -216,7 +218,7 @@ const styles = StyleSheet.create({
   skeletonThumb: {
     width: 88,
     height: 88,
-    borderRadius: 4,
+    borderRadius: 12,
   },
   skeletonLine: {
     height: 12,

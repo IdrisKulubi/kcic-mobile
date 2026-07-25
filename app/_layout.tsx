@@ -47,10 +47,6 @@ function RootNavigation() {
             headerShown: true,
           }}
         />
-        <Stack.Screen
-          name="ask"
-          options={{ ...modalStackScreenOptions, presentation: 'modal', title: 'Ask KCIC', headerShown: true }}
-        />
         <Stack.Screen name="library" options={{ title: 'Library', headerShown: true }} />
         <Stack.Screen name="profile" options={{ title: 'Profile', headerShown: true }} />
         <Stack.Screen name="content/[type]/[id]" options={{ title: 'Insight', headerShown: true }} />
