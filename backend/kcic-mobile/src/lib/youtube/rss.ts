@@ -32,9 +32,81 @@ function extractThumbnailUrl(block: string, videoId: string) {
   return match?.[1] ?? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
 }
 
-function classifyMediaKind(title: string, description: string): MediaItemKind {
+function extractAlternateLink(entryBlock: string, videoId: string) {
+  const pattern = /<link rel="alternate" href="([^"]+)"/i
+  const match = pattern.exec(entryBlock)
+  return match?.[1] ?? `https://www.youtube.com/watch?v=${videoId}`
+}
+
+function isPodcastItem(title: string, description: string, watchUrl: string) {
   const haystack = `${title} ${description}`.toLowerCase()
-  return haystack.includes("podcast") ? "podcast" : "video"
+  const normalizedTitle = title.toLowerCase()
+
+  const videoOnlyPatterns = [
+    /\bsuccess stor(?:y|ies)\b/,
+    /\bhighlights?\s+from\b/,
+    /\b(?:event|programme|program)\s+highlights?\b/,
+    /\b(?:official\s+)?launch\b/,
+    /\bsummit\b/,
+    /\bbootcamp\b/,
+    /\bcompetition\b/,
+    /\binvestment\s+summit\b/,
+    /\bforum\b/,
+    /\bexpo\b/,
+    /\bworkshop\b/,
+    /\bdemo\s+day\b/,
+    /\bpitch\s+day\b/,
+    /\bspotlight\b/,
+    /\becosystem\s+update\b/,
+  ]
+
+  if (
+    videoOnlyPatterns.some(
+      (pattern) => pattern.test(haystack) || pattern.test(normalizedTitle)
+    )
+  ) {
+    return false
+  }
+
+  const podcastPatterns = [
+    /\bpodcasts?\b/,
+    /#podcast\b/,
+    /sustainably\s*speaking/,
+    /\bapple\s+podcasts?\b/,
+    /\bspotify\b/,
+    /\blisten on\b/,
+    /\bwatch on youtube\b.+\blisten on\b/,
+    /\btune in to\b.+\bepisode\b/,
+    /\bthis episode\b/,
+    /\bin this episode\b/,
+    /\blatest episode\b/,
+    /\bepisode of the\b/,
+    /\bconversation with\b/,
+    /\bsit down with\b/,
+    /\bwe sat down with\b/,
+    /\binterview\b/,
+  ]
+
+  if (podcastPatterns.some((pattern) => pattern.test(haystack))) {
+    return true
+  }
+
+  const isInterviewTitle = /^.+ \| [^|]+$/.test(title.trim())
+  const isShort = watchUrl.includes("/shorts/")
+
+  if (isInterviewTitle && !isShort) {
+    return true
+  }
+
+  if (isShort && /\bepisode\b/.test(haystack)) {
+    return true
+  }
+
+  return false
+}
+
+function classifyMediaKind(title: string, description: string, watchUrl: string): MediaItemKind {
+  return isPodcastItem(title, description, watchUrl) ? "podcast" : "video"
 }
 
 function trimSummary(value: string) {
@@ -57,6 +129,7 @@ export function parseYouTubeRssFeed(xml: string): MediaItem[] {
       )
       const publishedAt = extractTag(entryBlock, "published") || new Date().toISOString()
       const thumbnail = extractThumbnailUrl(entryBlock, videoId)
+      const watchUrl = extractAlternateLink(entryBlock, videoId)
 
       return {
         id: videoId,
@@ -65,8 +138,10 @@ export function parseYouTubeRssFeed(xml: string): MediaItem[] {
         thumbnail,
         publishedAt,
         duration: "",
-        youtubeUrl: `https://www.youtube.com/watch?v=${videoId}`,
-        kind: classifyMediaKind(title, description),
+        youtubeUrl: watchUrl.includes("/shorts/")
+          ? `https://www.youtube.com/watch?v=${videoId}`
+          : watchUrl,
+        kind: classifyMediaKind(title, description, watchUrl),
       } satisfies MediaItem
     })
     .filter((item): item is MediaItem => item !== null)

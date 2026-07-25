@@ -21,7 +21,7 @@ export async function fetchChannelMedia(): Promise<MediaListResponse> {
     }
 
     const podcasts = items.filter((item) => item.kind === "podcast")
-    const videos = items.filter((item) => item.kind === "video")
+    const videos = items.filter((item) => item.kind !== "podcast")
     const data: MediaListResponse = { podcasts, videos, source: "youtube" }
 
     cache = { expiresAt: Date.now() + CACHE_TTL_MS, data }
