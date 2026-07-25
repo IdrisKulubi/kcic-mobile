@@ -16,7 +16,11 @@ import {
 export const EXPLORE_HEADER_BAR_HEIGHT = 58;
 export const EXPLORE_HEADER_BOTTOM_GAP = 8;
 
-export function useCollapsingHeaderScroll(locked = false, hideDistance = EXPLORE_HEADER_BAR_HEIGHT + 10) {
+export function useCollapsingHeaderScroll(
+  locked = false,
+  hideDistance = EXPLORE_HEADER_BAR_HEIGHT + 10,
+  resetKey?: string
+) {
   const minimizeState = useMinimizeState();
   const headerProgress = useSharedValue(0);
   const previousY = useSharedValue(0);
@@ -33,6 +37,12 @@ export function useCollapsingHeaderScroll(locked = false, hideDistance = EXPLORE
       headerProgress.value = withSpring(0, MINIMIZE_SPRING);
     }
   }, [headerProgress, locked, lockedValue]);
+
+  useEffect(() => {
+    headerProgress.value = 0;
+    previousY.value = 0;
+    setMinimized(minimizeState, 0);
+  }, [headerProgress, minimizeState, previousY, resetKey]);
 
   const onScroll = useAnimatedScrollHandler({
     onScroll: (event) => {

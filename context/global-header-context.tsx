@@ -4,6 +4,7 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -45,16 +46,22 @@ export function GlobalHeaderProvider({ children }: { children: ReactNode }) {
   const isExploreTab = isExploreRoute(pathname);
   const headerHideDistance = insets.top + EXPLORE_HEADER_BAR_HEIGHT + EXPLORE_HEADER_BOTTOM_GAP + 12;
   const headerLocked = isSearching && isExploreTab;
-  const { onScroll, headerStyle } = useCollapsingHeaderScroll(headerLocked, headerHideDistance);
+  const { onScroll, headerStyle } = useCollapsingHeaderScroll(
+    headerLocked,
+    headerHideDistance,
+    pathname
+  );
   const contentTopPadding = insets.top + EXPLORE_HEADER_BAR_HEIGHT + EXPLORE_HEADER_BOTTOM_GAP;
 
   const clearSearch = useCallback(() => setSearchQuery(''), []);
+  const pathnameRef = useRef(pathname);
+  pathnameRef.current = pathname;
 
   const handleSearchFocus = useCallback(() => {
-    if (!isExploreRoute(pathname)) {
+    if (!isExploreRoute(pathnameRef.current)) {
       router.push('/explore');
     }
-  }, [pathname, router]);
+  }, [router]);
 
   const value = useMemo(
     () => ({

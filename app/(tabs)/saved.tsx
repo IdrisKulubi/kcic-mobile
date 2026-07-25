@@ -8,7 +8,8 @@ import { AppScreen, Card, PrimaryButton, SectionTitle, palette } from '@/compone
 import { usePrototype } from '@/context/prototype-context';
 import { resolveBookmark, type BookmarkType } from '@/data/kcic';
 import { useContent } from '@/context/content-context';
-import { openContent } from '@/lib/navigation';
+import { useMedia } from '@/context/media-context';
+import { openContent, openPodcastEpisode } from '@/lib/navigation';
 
 type SavedType = BookmarkType | 'programme' | 'opportunity';
 
@@ -18,6 +19,7 @@ function bookmarkTypeLabel(type: SavedType) {
   if (type === 'opportunity') return 'Opportunity';
   if (type === 'story') return 'Story';
   if (type === 'event') return 'Event';
+  if (type === 'podcast') return 'Media';
   return 'Resource';
 }
 
@@ -25,11 +27,26 @@ export default function SavedScreen() {
   const router = useRouter();
   const { bookmarks, toggleBookmark } = usePrototype();
   const { articles, programmes, opportunities } = useContent();
+  const { getItemById } = useMedia();
 
   const savedItems = useMemo(
     () =>
       Array.from(bookmarks)
         .map((key) => {
+          if (key.startsWith('podcast:')) {
+            const id = key.slice('podcast:'.length);
+            const mediaItem = getItemById(id);
+            if (mediaItem) {
+              return {
+                key,
+                type: 'podcast' as const,
+                id,
+                title: mediaItem.title,
+                subtitle: mediaItem.kind === 'podcast' ? 'Podcast' : 'Video',
+                icon: 'podcasts' as const,
+              };
+            }
+          }
           if (key.startsWith('article:programme:')) {
             const slug = key.slice('article:programme:'.length);
             const item = programmes.find((programme) => programme.slug === slug);
@@ -61,12 +78,17 @@ export default function SavedScreen() {
           return resolveBookmark(key);
         })
         .filter((item): item is NonNullable<typeof item> => item !== null),
-    [articles, bookmarks, opportunities, programmes]
+    [articles, bookmarks, getItemById, opportunities, programmes]
   );
 
   const handleOpen = (type: SavedType, id: string, title: string, detail: string) => {
     if (type === 'resource') {
       showOpenResource(title, detail);
+      return;
+    }
+
+    if (type === 'podcast') {
+      openPodcastEpisode(id);
       return;
     }
 

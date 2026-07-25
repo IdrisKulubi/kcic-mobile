@@ -10,6 +10,7 @@ import { IntroSplash } from '@/components/kcic/intro-splash';
 import { ToastProvider } from '@/components/kcic/toast-provider';
 import { AuthProvider } from '@/context/auth-context';
 import { ContentProvider } from '@/context/content-context';
+import { MediaProvider } from '@/context/media-context';
 import { PrototypeProvider, usePrototype } from '@/context/prototype-context';
 import { defaultStackScreenOptions, modalStackScreenOptions } from '@/lib/stack-options';
 
@@ -71,7 +72,9 @@ export default function RootLayout() {
         <ToastProvider>
           <AuthProvider>
             <ContentProvider>
-              <RootNavigation />
+              <MediaProvider>
+                <RootNavigation />
+              </MediaProvider>
             </ContentProvider>
           </AuthProvider>
         </ToastProvider>

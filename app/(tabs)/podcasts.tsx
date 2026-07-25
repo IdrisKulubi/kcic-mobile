@@ -1,239 +1,223 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Image } from 'expo-image';
-import * as WebBrowser from 'expo-web-browser';
+import { StatusBar } from 'expo-status-bar';
 import { useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  Pressable,
+  RefreshControl,
+  Share,
+  StyleSheet,
+  Text,
+  useColorScheme,
+  View,
+} from 'react-native';
+import Animated from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AppScreen, Card, Pill, palette } from '@/components/kcic/ui';
-import { getPodcast, podcasts, type Podcast } from '@/data/kcic';
+import { MediaItemCard, MediaListSkeleton } from '@/components/kcic/media-item-card';
+import { MediaSegmentTabs, type MediaSegment } from '@/components/kcic/media-segment-tabs';
+import { palette } from '@/components/kcic/ui';
+import { useGlobalHeader } from '@/context/global-header-context';
+import { useMedia } from '@/context/media-context';
+import { useMediaPlayer } from '@/context/media-player-context';
+import { usePrototype } from '@/context/prototype-context';
+import { bookmarkKey } from '@/data/kcic';
+import { hapticLight } from '@/lib/haptics';
+import type { MediaItem } from '@/lib/media-api';
+import { TAB_SCREEN_BOTTOM_INSET } from '@/lib/tab-bar-layout';
+import { fonts } from '@/lib/typography';
 
-export default function PodcastsScreen() {
+const mediaThemes = {
+  light: {
+    background: '#F5F5F6',
+    surface: '#FFFFFF',
+    surfaceAlt: '#EEEFF0',
+    ink: '#3F4042',
+    muted: '#65676A',
+    border: '#DFE0E1',
+    tabActive: palette.blue,
+    imageShade: 'rgba(34, 35, 37, 0.18)',
+  },
+  dark: {
+    background: '#151617',
+    surface: '#202123',
+    surfaceAlt: '#292A2C',
+    ink: '#F4F4F5',
+    muted: '#B4B5B7',
+    border: '#38393B',
+    tabActive: palette.blue,
+    imageShade: 'rgba(15, 16, 17, 0.42)',
+  },
+} as const;
+
+export default function MediaScreen() {
   const { episode } = useLocalSearchParams<{ episode?: string }>();
-  const [selectedPodcast, setSelectedPodcast] = useState<Podcast>(podcasts[0]);
+  const isDark = useColorScheme() === 'dark';
+  const colors = isDark ? mediaThemes.dark : mediaThemes.light;
+  const { onScroll, contentTopPadding } = useGlobalHeader();
+  const { podcasts, videos, loading, refreshing, error, refresh } = useMedia();
+  const { play } = useMediaPlayer();
+  const { toggleBookmark, isBookmarked } = usePrototype();
+  const [activeSegment, setActiveSegment] = useState<MediaSegment>('podcasts');
+
+  const items = activeSegment === 'podcasts' ? podcasts : videos;
 
   useEffect(() => {
-    if (episode) {
-      const match = getPodcast(episode);
-      if (match) setSelectedPodcast(match);
-    }
-  }, [episode]);
+    if (!episode) return;
+    const match = [...podcasts, ...videos].find((item) => item.id === episode);
+    if (match) play(match);
+  }, [episode, play, podcasts, videos]);
 
-  const selectPodcast = (podcast: Podcast) => {
-    setSelectedPodcast(podcast);
-  };
-
-  const playSelectedPodcast = async () => {
-    await WebBrowser.openBrowserAsync(selectedPodcast.youtubeUrl, {
-      presentationStyle: WebBrowser.WebBrowserPresentationStyle.FULL_SCREEN,
+  const handleShare = async (item: MediaItem) => {
+    hapticLight();
+    await Share.share({
+      title: item.title,
+      message: `${item.title}\n\n${item.youtubeUrl}`,
     });
   };
 
+  const emptyCopy = useMemo(() => {
+    if (activeSegment === 'podcasts') {
+      return 'No podcasts published yet. Check back soon for new KCIC conversations.';
+    }
+    return 'No videos published yet. Check back soon for new KCIC media.';
+  }, [activeSegment]);
+
   return (
-    <AppScreen>
-      <Text style={styles.eyebrow}>Listen & Watch</Text>
-      <Text style={styles.title}>Podcasts</Text>
-      <Text style={styles.intro}>
-        Access the latest KCIC conversations with founders, ecosystem partners, and climate
-        innovation leaders.
-      </Text>
+    <SafeAreaView
+      style={[styles.screen, { backgroundColor: colors.background }]}
+      edges={['left', 'right']}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
-      <Card style={styles.playerCard}>
-        <Pressable style={styles.playerFrame} onPress={playSelectedPodcast}>
-          <Image
-            source={{ uri: selectedPodcast.thumbnail }}
-            style={StyleSheet.absoluteFill}
-            contentFit="cover"
+      <Animated.ScrollView
+        style={[styles.scroll, { backgroundColor: colors.background }]}
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: contentTopPadding, paddingBottom: TAB_SCREEN_BOTTOM_INSET + 72 },
+        ]}
+        showsVerticalScrollIndicator={false}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => void refresh()}
+            tintColor={palette.green}
           />
-          <View style={styles.playerShade} />
-          <View style={styles.playerButton}>
-            <MaterialIcons name="play-arrow" size={42} color={palette.white} />
+        }>
+        <MediaSegmentTabs
+          active={activeSegment}
+          onChange={(segment) => {
+            hapticLight();
+            setActiveSegment(segment);
+          }}
+          colors={{
+            ink: colors.ink,
+            muted: colors.muted,
+            border: colors.border,
+            tabActive: colors.tabActive,
+          }}
+        />
+
+        {loading && items.length === 0 ? (
+          <MediaListSkeleton
+            colors={{
+              surface: colors.surface,
+              border: colors.border,
+              surfaceAlt: colors.surfaceAlt,
+            }}
+          />
+        ) : null}
+
+        {error && items.length === 0 ? (
+          <View style={[styles.stateCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <MaterialIcons name="cloud-off" size={24} color={palette.blue} />
+            <Text style={[styles.stateTitle, { color: colors.ink }]}>Media unavailable</Text>
+            <Text style={[styles.stateBody, { color: colors.muted }]}>{error}</Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => void refresh()}
+              style={({ pressed }) => [
+                styles.retryButton,
+                { backgroundColor: palette.green, opacity: pressed ? 0.76 : 1 },
+              ]}>
+              <Text style={styles.retryText}>Try again</Text>
+            </Pressable>
           </View>
-          <Text style={styles.playerHint}>Tap to play in app</Text>
-        </Pressable>
-        <View style={styles.nowPlaying}>
-          <Pill label={selectedPodcast.publishedLabel} active />
-          <Text style={styles.nowTitle}>{selectedPodcast.title}</Text>
-          <Text style={styles.nowSummary}>{selectedPodcast.summary}</Text>
-        </View>
-      </Card>
+        ) : null}
 
-      <View style={styles.listHeader}>
-        <Text style={styles.listTitle}>Latest Episodes</Text>
-        <Text style={styles.listCount}>{podcasts.length} videos</Text>
-      </View>
+        {!loading && !error && items.length === 0 ? (
+          <View style={[styles.stateCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <MaterialIcons name="play-circle-outline" size={24} color={palette.blue} />
+            <Text style={[styles.stateTitle, { color: colors.ink }]}>Nothing here yet</Text>
+            <Text style={[styles.stateBody, { color: colors.muted }]}>{emptyCopy}</Text>
+          </View>
+        ) : null}
 
-      {podcasts.map((podcast) => {
-        const isSelected = podcast.id === selectedPodcast.id;
-
-        return (
-          <Pressable key={podcast.id} onPress={() => selectPodcast(podcast)}>
-            <Card style={[styles.episodeCard, isSelected ? styles.episodeCardActive : null]}>
-              <Image source={{ uri: podcast.thumbnail }} style={styles.thumbnail} contentFit="cover" />
-              <View style={styles.episodeBody}>
-                <View style={styles.episodeMeta}>
-                  <Text style={styles.episodeLabel}>{podcast.publishedLabel}</Text>
-                  <View style={styles.durationPill}>
-                    <MaterialIcons
-                      name={isSelected ? 'pause-circle-filled' : 'play-circle-filled'}
-                      size={16}
-                      color={isSelected ? palette.limeDark : palette.blue}
-                    />
-                    <Text style={styles.durationText}>{isSelected ? 'Now playing' : podcast.duration}</Text>
-                  </View>
-                </View>
-                <Text style={styles.episodeTitle}>{podcast.title}</Text>
-                <Text style={styles.episodeSummary} numberOfLines={3}>
-                  {podcast.summary}
-                </Text>
-              </View>
-            </Card>
-          </Pressable>
-        );
-      })}
-    </AppScreen>
+        {items.map((item) => {
+          const key = bookmarkKey('podcast', item.id);
+          return (
+            <MediaItemCard
+              key={item.id}
+              item={item}
+              colors={{
+                surface: colors.surface,
+                ink: colors.ink,
+                muted: colors.muted,
+                border: colors.border,
+                imageShade: colors.imageShade,
+              }}
+              saved={isBookmarked(key)}
+              onPress={() => play(item)}
+              onToggleSave={() => {
+                hapticLight();
+                toggleBookmark(key);
+              }}
+              onShare={() => void handleShare(item)}
+            />
+          );
+        })}
+      </Animated.ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  eyebrow: {
-    color: palette.limeDark,
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0,
-    textTransform: 'uppercase',
+  screen: {
+    flex: 1,
   },
-  title: {
-    color: palette.ink,
-    fontSize: 38,
-    lineHeight: 42,
-    fontWeight: '900',
-    marginTop: 8,
+  scroll: {
+    flex: 1,
   },
-  intro: {
-    color: palette.slate,
-    fontSize: 15,
-    lineHeight: 23,
-    marginTop: 12,
-    marginBottom: 20,
+  content: {
+    paddingHorizontal: 18,
   },
-  playerCard: {
-    padding: 0,
-    overflow: 'hidden',
-    marginBottom: 24,
-  },
-  playerFrame: {
-    height: 214,
-    backgroundColor: '#08140F',
+  stateCard: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 20,
     alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
+    gap: 8,
   },
-  playerShade: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 28, 22, 0.34)',
+  stateTitle: {
+    fontFamily: fonts.bold,
+    fontSize: 18,
   },
-  playerButton: {
-    width: 78,
-    height: 78,
-    borderRadius: 39,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: palette.lime,
-    elevation: 4,
-  },
-  playerHint: {
-    position: 'absolute',
-    bottom: 16,
-    left: 18,
-    color: palette.white,
-    fontSize: 13,
-    fontWeight: '900',
-  },
-  nowPlaying: {
-    padding: 18,
-    gap: 10,
-  },
-  nowTitle: {
-    color: palette.ink,
-    fontSize: 23,
-    lineHeight: 28,
-    fontWeight: '900',
-  },
-  nowSummary: {
-    color: palette.slate,
+  stateBody: {
+    fontFamily: fonts.regular,
     fontSize: 14,
     lineHeight: 21,
+    textAlign: 'center',
   },
-  listHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 14,
+  retryButton: {
+    marginTop: 8,
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
   },
-  listTitle: {
-    color: palette.ink,
-    fontSize: 24,
-    fontWeight: '900',
-  },
-  listCount: {
-    color: palette.limeDark,
+  retryText: {
+    fontFamily: fonts.bold,
     fontSize: 13,
-    fontWeight: '900',
-  },
-  episodeCard: {
-    flexDirection: 'row',
-    gap: 14,
-    padding: 12,
-    marginBottom: 14,
-  },
-  episodeCardActive: {
-    borderColor: palette.lime,
-    backgroundColor: '#FBFFF7',
-  },
-  thumbnail: {
-    width: 112,
-    height: 92,
-    borderRadius: 10,
-    backgroundColor: palette.panel,
-  },
-  episodeBody: {
-    flex: 1,
-    gap: 7,
-  },
-  episodeMeta: {
-    gap: 7,
-  },
-  episodeLabel: {
-    color: palette.forest,
-    fontSize: 11,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-  },
-  durationPill: {
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    borderRadius: 10,
-    backgroundColor: '#EEF8FF',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  durationText: {
-    color: palette.ink,
-    fontSize: 11,
-    fontWeight: '800',
-  },
-  episodeTitle: {
-    color: palette.ink,
-    fontSize: 16,
-    lineHeight: 20,
-    fontWeight: '900',
-  },
-  episodeSummary: {
-    color: palette.slate,
-    fontSize: 12,
-    lineHeight: 17,
+    color: '#303133',
   },
 });

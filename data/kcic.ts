@@ -298,11 +298,11 @@ export const notifications: AppNotification[] = [
   },
 ];
 
-export function bookmarkKey(type: ContentType | 'resource', id: string) {
+export function bookmarkKey(type: ContentType | 'resource' | 'podcast', id: string) {
   return `${type}:${id}`;
 }
 
-export type BookmarkType = ContentType | 'resource';
+export type BookmarkType = ContentType | 'resource' | 'podcast';
 
 export type ResolvedBookmark = {
   key: string;
@@ -369,6 +369,19 @@ export function resolveBookmark(key: string): ResolvedBookmark | null {
       title: resource.title,
       subtitle: resource.detail,
       icon: resource.icon as ResolvedBookmark['icon'],
+    };
+  }
+
+  if (type === 'podcast') {
+    const podcast = getPodcast(id);
+    if (!podcast) return null;
+    return {
+      key,
+      type,
+      id,
+      title: podcast.title,
+      subtitle: podcast.publishedLabel,
+      icon: 'podcasts',
     };
   }
 
