@@ -9,6 +9,7 @@ import 'react-native-reanimated';
 import { IntroSplash } from '@/components/kcic/intro-splash';
 import { ToastProvider } from '@/components/kcic/toast-provider';
 import { AuthProvider } from '@/context/auth-context';
+import { BookmarksProvider } from '@/context/bookmarks-context';
 import { ContentProvider } from '@/context/content-context';
 import { MediaProvider } from '@/context/media-context';
 import { PrototypeProvider, usePrototype } from '@/context/prototype-context';
@@ -67,11 +68,13 @@ export default function RootLayout() {
       <PrototypeProvider>
         <ToastProvider>
           <AuthProvider>
-            <ContentProvider>
-              <MediaProvider>
-                <RootNavigation />
-              </MediaProvider>
-            </ContentProvider>
+            <BookmarksProvider>
+              <ContentProvider>
+                <MediaProvider>
+                  <RootNavigation />
+                </MediaProvider>
+              </ContentProvider>
+            </BookmarksProvider>
           </AuthProvider>
         </ToastProvider>
       </PrototypeProvider>

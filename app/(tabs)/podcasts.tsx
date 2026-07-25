@@ -17,10 +17,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MediaItemCard, MediaListSkeleton } from '@/components/kcic/media-item-card';
 import { MediaSegmentTabs, type MediaSegment } from '@/components/kcic/media-segment-tabs';
 import { palette } from '@/components/kcic/ui';
+import { useBookmarks } from '@/context/bookmarks-context';
 import { useGlobalHeader } from '@/context/global-header-context';
 import { useMedia } from '@/context/media-context';
 import { useMediaPlayer } from '@/context/media-player-context';
-import { usePrototype } from '@/context/prototype-context';
 import { bookmarkKey } from '@/data/kcic';
 import { hapticLight } from '@/lib/haptics';
 import type { MediaItem } from '@/lib/media-api';
@@ -57,7 +57,7 @@ export default function MediaScreen() {
   const { onScroll, contentTopPadding } = useGlobalHeader();
   const { podcasts, videos, loading, refreshing, error, refresh } = useMedia();
   const { play } = useMediaPlayer();
-  const { toggleBookmark, isBookmarked } = usePrototype();
+  const { toggleBookmark, isBookmarked } = useBookmarks();
   const [activeSegment, setActiveSegment] = useState<MediaSegment>('podcasts');
 
   const items = activeSegment === 'podcasts' ? podcasts : videos;

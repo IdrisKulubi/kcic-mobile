@@ -11,6 +11,7 @@ import { ArticleDetailSkeleton } from '@/components/kcic/article-detail-skeleton
 import { PrimaryButton, palette } from '@/components/kcic/ui';
 import { ContentMessage, ContentSkeleton } from '@/components/kcic/content-state';
 import { RichText } from '@/components/kcic/rich-text';
+import { useBookmarks } from '@/context/bookmarks-context';
 import { usePrototype } from '@/context/prototype-context';
 import {
   fetchContentDetail,
@@ -32,7 +33,8 @@ import {
 export default function ContentDetailScreen() {
   const { type, id } = useLocalSearchParams<{ type: string; id: string }>();
   const contentType = type as ContentType;
-  const { toggleBookmark, isBookmarked, toggleRsvp, isRsvped } = usePrototype();
+  const { toggleBookmark, isBookmarked } = useBookmarks();
+  const { toggleRsvp, isRsvped } = usePrototype();
 
   if (type === 'article' || type === 'programme' || type === 'opportunity') {
     return <LiveContentDetail type={type} slugOrId={id} />;
@@ -130,7 +132,7 @@ function LiveContentDetail({
   type: 'article' | 'programme' | 'opportunity';
   slugOrId: string;
 }) {
-  const { toggleBookmark, isBookmarked } = usePrototype();
+  const { toggleBookmark, isBookmarked } = useBookmarks();
   const [item, setItem] = useState<NewsArticle | Programme | Opportunity | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

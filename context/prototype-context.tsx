@@ -10,13 +10,10 @@ const DEFAULT_INTERESTS = [
 ];
 
 type PrototypeContextValue = {
-  bookmarks: Set<string>;
   rsvpEvents: Set<string>;
   interests: string[];
   notificationRead: Set<string>;
   hasUnreadNotifications: boolean;
-  toggleBookmark: (key: string) => void;
-  isBookmarked: (key: string) => boolean;
   toggleRsvp: (eventId: string) => boolean;
   isRsvped: (eventId: string) => boolean;
   markNotificationRead: (id: string) => void;
@@ -31,7 +28,6 @@ type PrototypeContextValue = {
 const PrototypeContext = createContext<PrototypeContextValue | null>(null);
 
 export function PrototypeProvider({ children }: { children: ReactNode }) {
-  const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
   const [rsvpEvents, setRsvpEvents] = useState<Set<string>>(new Set());
   const [interests, setInterests] = useState<string[]>(DEFAULT_INTERESTS);
   const [notificationRead, setNotificationRead] = useState<Set<string>>(new Set());
@@ -40,17 +36,6 @@ export function PrototypeProvider({ children }: { children: ReactNode }) {
   const markAppSessionReady = useCallback(() => {
     setAppSessionReady(true);
   }, []);
-
-  const toggleBookmark = useCallback((key: string) => {
-    setBookmarks((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  }, []);
-
-  const isBookmarked = useCallback((key: string) => bookmarks.has(key), [bookmarks]);
 
   const toggleRsvp = useCallback((eventId: string) => {
     let added = false;
@@ -95,13 +80,10 @@ export function PrototypeProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(
     () => ({
-      bookmarks,
       rsvpEvents,
       interests,
       notificationRead,
       hasUnreadNotifications,
-      toggleBookmark,
-      isBookmarked,
       toggleRsvp,
       isRsvped,
       markNotificationRead,
@@ -113,13 +95,10 @@ export function PrototypeProvider({ children }: { children: ReactNode }) {
       markAppSessionReady,
     }),
     [
-      bookmarks,
       rsvpEvents,
       interests,
       notificationRead,
       hasUnreadNotifications,
-      toggleBookmark,
-      isBookmarked,
       toggleRsvp,
       isRsvped,
       markNotificationRead,

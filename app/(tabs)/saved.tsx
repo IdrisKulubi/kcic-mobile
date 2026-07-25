@@ -10,11 +10,11 @@ import { SavedFilterChips } from '@/components/kcic/saved-filter-chips';
 import { SavedItemCard } from '@/components/kcic/saved-item-card';
 import { SavedListSkeleton } from '@/components/kcic/saved-list-skeleton';
 import { palette } from '@/components/kcic/ui';
+import { useBookmarks } from '@/context/bookmarks-context';
 import { useContent } from '@/context/content-context';
 import { useGlobalHeader } from '@/context/global-header-context';
 import { useMedia } from '@/context/media-context';
 import { useMediaPlayer } from '@/context/media-player-context';
-import { usePrototype } from '@/context/prototype-context';
 import { hapticLight } from '@/lib/haptics';
 import { openSavedItem } from '@/lib/open-saved-item';
 import {
@@ -56,7 +56,7 @@ export default function SavedScreen() {
   const isDark = useColorScheme() === 'dark';
   const colors = isDark ? savedThemes.dark : savedThemes.light;
   const { onScroll, contentTopPadding } = useGlobalHeader();
-  const { bookmarks, toggleBookmark } = usePrototype();
+  const { bookmarks, toggleBookmark, loading: bookmarksLoading } = useBookmarks();
   const { articles, programmes, opportunities, loading: contentLoading } = useContent();
   const { getItemById, loading: mediaLoading } = useMedia();
   const { play } = useMediaPlayer();
@@ -81,7 +81,8 @@ export default function SavedScreen() {
   );
 
   const isLoading =
-    bookmarks.size > 0 && (contentLoading || mediaLoading) && savedItems.length === 0;
+    bookmarksLoading ||
+    (bookmarks.size > 0 && (contentLoading || mediaLoading) && savedItems.length === 0);
 
   useEffect(() => {
     if (activeFilter !== 'all' && counts[activeFilter] === 0) {

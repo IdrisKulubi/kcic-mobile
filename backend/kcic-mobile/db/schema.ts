@@ -145,4 +145,23 @@ export const twoFactor = pgTable(
   ]
 )
 
+export const savedItem = pgTable(
+  "saved_item",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    itemKey: text("item_key").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("saved_item_user_key_unique").on(table.userId, table.itemKey),
+    index("saved_item_user_id_idx").on(table.userId),
+    index("saved_item_created_at_idx").on(table.createdAt),
+  ]
+)
+
 export * from "./content-schema"

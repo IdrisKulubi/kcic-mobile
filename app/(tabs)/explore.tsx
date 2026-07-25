@@ -17,9 +17,9 @@ import Animated from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { palette } from '@/components/kcic/ui';
+import { useBookmarks } from '@/context/bookmarks-context';
 import { useContent } from '@/context/content-context';
 import { useGlobalHeader } from '@/context/global-header-context';
-import { usePrototype } from '@/context/prototype-context';
 import { bookmarkKey, insightFilters } from '@/data/kcic';
 import { formatContentDate, getProgrammeImage, type NewsArticle } from '@/lib/content-api';
 import {
@@ -80,7 +80,7 @@ const exploreThemes = {
 export default function ExploreScreen() {
   const isDark = useColorScheme() === 'dark';
   const colors = isDark ? exploreThemes.dark : exploreThemes.light;
-  const { toggleBookmark, isBookmarked } = usePrototype();
+  const { toggleBookmark, isBookmarked } = useBookmarks();
   const { articles, programmes, opportunities, loading, refreshing, error, refresh } = useContent();
   const { searchQuery, setSearchQuery, isSearching, onScroll, contentTopPadding } = useGlobalHeader();
   const [activeSection, setActiveSection] = useState<ExploreSection>('all');

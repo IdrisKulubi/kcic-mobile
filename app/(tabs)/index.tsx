@@ -14,6 +14,7 @@ import {
 
 import { AppScreen, palette } from '@/components/kcic/ui';
 import { useAuth } from '@/context/auth-context';
+import { useBookmarks } from '@/context/bookmarks-context';
 import { useContent } from '@/context/content-context';
 import { useMedia } from '@/context/media-context';
 import { usePrototype } from '@/context/prototype-context';
@@ -124,14 +125,8 @@ export default function ForYouScreen() {
   const { user } = useAuth();
   const { articles, opportunities, loading, refreshing, error, refresh } = useContent();
   const { podcasts, videos } = useMedia();
-  const {
-    bookmarks,
-    interests,
-    toggleBookmark,
-    isBookmarked,
-    toggleRsvp,
-    isRsvped,
-  } = usePrototype();
+  const { bookmarks, toggleBookmark, isBookmarked } = useBookmarks();
+  const { interests, toggleRsvp, isRsvped } = usePrototype();
 
   const rankedArticles = useMemo(
     () =>

@@ -14,6 +14,7 @@ import {
   palette,
 } from '@/components/kcic/ui';
 import { useAuth } from '@/context/auth-context';
+import { useBookmarks } from '@/context/bookmarks-context';
 import { usePrototype } from '@/context/prototype-context';
 import { bookmarkKey, events, savedResources } from '@/data/kcic';
 import { openContent, openSettings } from '@/lib/navigation';
@@ -27,7 +28,8 @@ const SETTING_SLUGS: Record<string, string> = {
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, signOut } = useAuth();
-  const { interests, removeInterest, addInterest, toggleBookmark, isBookmarked } = usePrototype();
+  const { interests, removeInterest, addInterest } = usePrototype();
+  const { toggleBookmark, isBookmarked } = useBookmarks();
 
   const profileEvent = events[1];
 
