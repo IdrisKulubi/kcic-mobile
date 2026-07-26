@@ -36,24 +36,46 @@ const SEED_ITEMS = [
   },
   {
     id: "67g_BWUEeBI",
-    title: "KCIC Climate Innovation Spotlight",
+    title: "KCIC Podcast Episode 4",
     summary:
       "Stories from climate founders translating technical ideas into sustainable businesses with measurable local impact.",
     thumbnail: "https://img.youtube.com/vi/67g_BWUEeBI/hqdefault.jpg",
     publishedAt: "2024-10-22T00:00:00.000Z",
     duration: "Watch now",
     youtubeUrl: "https://www.youtube.com/watch?v=67g_BWUEeBI",
-    kind: "video" as const,
+    kind: "podcast" as const,
   },
   {
     id: "IjAAAQ03XvA",
-    title: "KCIC Ecosystem Update",
+    title: "KCIC Podcast Episode 5",
     summary:
       "Practical reflections on scaling climate solutions across agriculture, energy, water, and circular economy sectors.",
     thumbnail: "https://img.youtube.com/vi/IjAAAQ03XvA/hqdefault.jpg",
     publishedAt: "2024-10-29T00:00:00.000Z",
     duration: "Watch now",
     youtubeUrl: "https://www.youtube.com/watch?v=IjAAAQ03XvA",
+    kind: "podcast" as const,
+  },
+  {
+    id: "XLYFeOynMpY",
+    title: "KCIC Digital Learning Management System",
+    summary:
+      "Practical business training created for enterprises in KCIC programmes.",
+    thumbnail: "https://img.youtube.com/vi/XLYFeOynMpY/hqdefault.jpg",
+    publishedAt: "2021-01-01T00:00:00.000Z",
+    duration: "Watch now",
+    youtubeUrl: "https://www.youtube.com/watch?v=XLYFeOynMpY",
+    kind: "video" as const,
+  },
+  {
+    id: "bmq5kslOlag",
+    title: "KCIC Enterprise Support and Climate Innovation",
+    summary:
+      "A general KCIC channel video on enterprise development and climate innovation support.",
+    thumbnail: "https://img.youtube.com/vi/bmq5kslOlag/hqdefault.jpg",
+    publishedAt: "2021-01-01T00:00:00.000Z",
+    duration: "Watch now",
+    youtubeUrl: "https://www.youtube.com/watch?v=bmq5kslOlag",
     kind: "video" as const,
   },
 ]

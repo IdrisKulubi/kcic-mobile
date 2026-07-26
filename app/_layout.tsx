@@ -44,8 +44,7 @@ function RootNavigation() {
           options={{
             ...modalStackScreenOptions,
             presentation: 'modal',
-            title: 'Notifications',
-            headerShown: true,
+            headerShown: false,
           }}
         />
         <Stack.Screen name="library" options={{ title: 'Library', headerShown: true }} />

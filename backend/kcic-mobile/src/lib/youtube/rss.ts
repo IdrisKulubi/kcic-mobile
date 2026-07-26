@@ -1,3 +1,8 @@
+import {
+  buildThumbnailUrl,
+  buildWatchUrl,
+  trimSummary,
+} from "@/src/lib/youtube/media-helpers"
 import type { MediaItem, MediaItemKind } from "@/src/lib/youtube/types"
 
 const DEFAULT_CHANNEL_ID = "UC09nlou3Nry68ZlGOGqL_7w"
@@ -29,18 +34,36 @@ function extractMediaTag(block: string, tag: string) {
 function extractThumbnailUrl(block: string, videoId: string) {
   const pattern = /<media:thumbnail[^>]*url="([^"]+)"/i
   const match = pattern.exec(block)
-  return match?.[1] ?? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+  return buildThumbnailUrl(videoId, match?.[1])
 }
 
 function extractAlternateLink(entryBlock: string, videoId: string) {
   const pattern = /<link rel="alternate" href="([^"]+)"/i
   const match = pattern.exec(entryBlock)
-  return match?.[1] ?? `https://www.youtube.com/watch?v=${videoId}`
+  return match?.[1] ?? buildWatchUrl(videoId)
 }
 
-function isPodcastItem(title: string, description: string, watchUrl: string) {
+export function isPodcastItem(title: string, description: string, watchUrl: string) {
   const haystack = `${title} ${description}`.toLowerCase()
   const normalizedTitle = title.toLowerCase()
+
+  const strongPodcastPatterns = [
+    /\bkcic\s+podcast\b/,
+    /\bkcic podcast episode\s+\d+\b/,
+    /sustainably\s*speaking/,
+    /#podcast\b/,
+    /\bapple\s+podcasts?\b/,
+    /\bspotify\b.*\bepisode\b/,
+    /\bspotify\b.*\bpodcast\b/,
+  ]
+
+  if (
+    strongPodcastPatterns.some(
+      (pattern) => pattern.test(haystack) || pattern.test(normalizedTitle)
+    )
+  ) {
+    return true
+  }
 
   const videoOnlyPatterns = [
     /\bsuccess stor(?:y|ies)\b/,
@@ -51,12 +74,9 @@ function isPodcastItem(title: string, description: string, watchUrl: string) {
     /\bbootcamp\b/,
     /\bcompetition\b/,
     /\binvestment\s+summit\b/,
-    /\bforum\b/,
     /\bexpo\b/,
-    /\bworkshop\b/,
     /\bdemo\s+day\b/,
     /\bpitch\s+day\b/,
-    /\bspotlight\b/,
     /\becosystem\s+update\b/,
   ]
 
@@ -68,12 +88,8 @@ function isPodcastItem(title: string, description: string, watchUrl: string) {
     return false
   }
 
-  const podcastPatterns = [
+  const weakPodcastPatterns = [
     /\bpodcasts?\b/,
-    /#podcast\b/,
-    /sustainably\s*speaking/,
-    /\bapple\s+podcasts?\b/,
-    /\bspotify\b/,
     /\blisten on\b/,
     /\bwatch on youtube\b.+\blisten on\b/,
     /\btune in to\b.+\bepisode\b/,
@@ -81,38 +97,26 @@ function isPodcastItem(title: string, description: string, watchUrl: string) {
     /\bin this episode\b/,
     /\blatest episode\b/,
     /\bepisode of the\b/,
-    /\bconversation with\b/,
-    /\bsit down with\b/,
-    /\bwe sat down with\b/,
-    /\binterview\b/,
+    /\bepisode\s+\d+\b/,
   ]
 
-  if (podcastPatterns.some((pattern) => pattern.test(haystack))) {
+  if (weakPodcastPatterns.some((pattern) => pattern.test(haystack))) {
     return true
   }
 
-  const isInterviewTitle = /^.+ \| [^|]+$/.test(title.trim())
-  const isShort = watchUrl.includes("/shorts/")
-
-  if (isInterviewTitle && !isShort) {
-    return true
-  }
-
-  if (isShort && /\bepisode\b/.test(haystack)) {
+  if (watchUrl.includes("/shorts/") && /\bepisode\b/.test(haystack)) {
     return true
   }
 
   return false
 }
 
-function classifyMediaKind(title: string, description: string, watchUrl: string): MediaItemKind {
+export function classifyMediaKind(
+  title: string,
+  description: string,
+  watchUrl: string
+): MediaItemKind {
   return isPodcastItem(title, description, watchUrl) ? "podcast" : "video"
-}
-
-function trimSummary(value: string) {
-  const normalized = value.replace(/\s+/g, " ").trim()
-  if (normalized.length <= 220) return normalized
-  return `${normalized.slice(0, 217)}...`
 }
 
 export function parseYouTubeRssFeed(xml: string): MediaItem[] {
@@ -139,7 +143,7 @@ export function parseYouTubeRssFeed(xml: string): MediaItem[] {
         publishedAt,
         duration: "",
         youtubeUrl: watchUrl.includes("/shorts/")
-          ? `https://www.youtube.com/watch?v=${videoId}`
+          ? buildWatchUrl(videoId)
           : watchUrl,
         kind: classifyMediaKind(title, description, watchUrl),
       } satisfies MediaItem
