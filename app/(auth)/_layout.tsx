@@ -7,11 +7,14 @@ import {
   useFonts,
 } from '@expo-google-fonts/inter';
 import { Stack } from 'expo-router';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, useColorScheme, View } from 'react-native';
 
+import { authThemes } from '@/components/kcic/auth/auth-theme';
 import { palette } from '@/components/kcic/ui';
 
 export default function AuthLayout() {
+  const isDark = useColorScheme() === 'dark';
+  const colors = isDark ? authThemes.dark : authThemes.light;
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -22,8 +25,14 @@ export default function AuthLayout() {
 
   if (!fontsLoaded) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: palette.shell }}>
-        <ActivityIndicator color={palette.forest} />
+      <View
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: colors.shell,
+        }}>
+        <ActivityIndicator color={palette.green} />
       </View>
     );
   }

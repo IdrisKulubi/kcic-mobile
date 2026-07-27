@@ -2,6 +2,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -14,10 +15,12 @@ import {
   Text,
   TextInput,
   TouchableWithoutFeedback,
+  useColorScheme,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useAuthTheme } from '@/components/kcic/auth/auth-theme';
 import {
   AuthField,
   PasswordAuthField,
@@ -25,7 +28,6 @@ import {
   VerificationCodeInput,
 } from '@/components/kcic/auth-ui';
 import { PasswordRecoveryForm } from '@/components/kcic/password-recovery-form';
-import { palette } from '@/components/kcic/ui';
 import { useAuth } from '@/context/auth-context';
 import { authClient } from '@/lib/auth-client';
 import { getAuthErrorToast, throwIfAuthError, type AuthAction } from '@/lib/auth-errors';
@@ -49,6 +51,8 @@ async function waitForStoredAuth() {
 export default function AuthScreen() {
   const router = useRouter();
   const { refreshSession } = useAuth();
+  const colors = useAuthTheme();
+  const isDark = useColorScheme() === 'dark';
   const emailInputRef = useRef<TextInput>(null);
   const passwordInputRef = useRef<TextInput>(null);
   const [mode, setMode] = useState<AuthMode>('sign-in');
@@ -253,8 +257,13 @@ export default function AuthScreen() {
 
   return (
     <View style={styles.root}>
-      <LinearGradient colors={['#E3F3EA', '#F4F8FF', '#FEFFFC']} locations={[0, 0.55, 1]} style={StyleSheet.absoluteFill} />
+      <LinearGradient
+        colors={[...colors.gradient]}
+        locations={[0, 0.55, 1]}
+        style={StyleSheet.absoluteFill}
+      />
       <SafeAreaView style={styles.screen}>
+        <StatusBar style={isDark ? 'light' : 'dark'} />
         <KeyboardAvoidingView style={styles.keyboardView} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <ScrollView
             contentContainerStyle={styles.scrollContent}
@@ -276,14 +285,19 @@ export default function AuthScreen() {
                       }
                       if (router.canGoBack()) router.back();
                     }}
-                    style={styles.backButton}
+                    style={[
+                      styles.backButton,
+                      { borderColor: colors.border, backgroundColor: colors.surface },
+                    ]}
                     accessibilityLabel="Go back">
-                    <MaterialIcons name="arrow-back" size={22} color={palette.ink} />
+                    <MaterialIcons name="arrow-back" size={22} color={colors.ink} />
                   </Pressable>
                   <View style={styles.navSpacer} />
                   {step === 'form' && !isRecoveringPassword ? (
                     <Pressable onPress={() => switchMode(isSignIn ? 'sign-up' : 'sign-in')} hitSlop={8}>
-                      <Text style={styles.navAction}>{isSignIn ? 'Sign up' : 'Sign in'}</Text>
+                      <Text style={[styles.navAction, { color: colors.ink }]}>
+                        {isSignIn ? 'Sign up' : 'Sign in'}
+                      </Text>
                     </Pressable>
                   ) : (
                     <View style={styles.navSpacer} />
@@ -303,23 +317,34 @@ export default function AuthScreen() {
                 ) : (
                   <>
                     <View style={styles.hero}>
-                      <Text style={styles.title}>{heroTitle}</Text>
-                      <Text style={styles.subtitle}>{heroSubtitle}</Text>
-                      {step === 'verify' ? <Text style={styles.emailValue}>{normalizedEmail}</Text> : null}
+                      <Text style={[styles.title, { color: colors.ink }]}>{heroTitle}</Text>
+                      <Text style={[styles.subtitle, { color: colors.muted }]}>{heroSubtitle}</Text>
+                      {step === 'verify' ? (
+                        <Text style={[styles.emailValue, { color: colors.ink }]}>{normalizedEmail}</Text>
+                      ) : null}
                     </View>
 
                     {step === 'verify' ? (
                   <View style={styles.form}>
-                    <Text style={styles.formLabel}>Enter verification code</Text>
+                    <Text style={[styles.formLabel, { color: colors.ink }]}>Enter verification code</Text>
                     <VerificationCodeInput value={code} onChange={setCode} />
                     <Pressable onPress={handleResend} disabled={busy} style={styles.inlineLink}>
-                      <Text style={styles.inlineLinkText}>I didn&apos;t get a code</Text>
+                      <Text style={[styles.inlineLinkText, { color: colors.muted }]}>
+                        I didn&apos;t get a code
+                      </Text>
                     </Pressable>
-                    <Pressable onPress={handleVerify} disabled={busy} style={styles.primaryButton}>
-                      {busy ? <ActivityIndicator color={palette.white} /> : <Text style={styles.primaryText}>Verify email</Text>}
+                    <Pressable
+                      onPress={handleVerify}
+                      disabled={busy}
+                      style={[styles.primaryButton, { backgroundColor: colors.accent }]}>
+                      {busy ? (
+                        <ActivityIndicator color={colors.primaryText} />
+                      ) : (
+                        <Text style={[styles.primaryText, { color: colors.primaryText }]}>Verify email</Text>
+                      )}
                     </Pressable>
                     <Pressable onPress={() => setStep('form')} style={styles.footerLink}>
-                      <Text style={styles.footerLinkText}>Use a different email</Text>
+                      <Text style={[styles.footerLinkText, { color: colors.link }]}>Use a different email</Text>
                     </Pressable>
                   </View>
                 ) : (
@@ -356,14 +381,14 @@ export default function AuthScreen() {
                           <MaterialIcons
                             name={rememberMe ? 'check-box' : 'check-box-outline-blank'}
                             size={20}
-                            color={rememberMe ? palette.forest : '#9AA3AF'}
+                            color={rememberMe ? colors.checkbox : colors.checkboxUnchecked}
                           />
-                          <Text style={styles.helperText}>Remember me</Text>
+                          <Text style={[styles.helperText, { color: colors.muted }]}>Remember me</Text>
                         </Pressable>
                         <Pressable
                           accessibilityRole="button"
                           onPress={() => setIsRecoveringPassword(true)}>
-                          <Text style={styles.linkText}>Forgot password?</Text>
+                          <Text style={[styles.linkText, { color: colors.ink }]}>Forgot password?</Text>
                         </Pressable>
                       </View>
                     ) : (
@@ -375,18 +400,18 @@ export default function AuthScreen() {
                         <MaterialIcons
                           name={agreedToTerms ? 'check-box' : 'check-box-outline-blank'}
                           size={20}
-                          color={agreedToTerms ? palette.forest : '#9AA3AF'}
+                          color={agreedToTerms ? colors.checkbox : colors.checkboxUnchecked}
                         />
-                        <Text style={styles.termsText}>
+                        <Text style={[styles.termsText, { color: colors.muted }]}>
                           I agree with{' '}
                           <Text
-                            style={styles.termsLink}
+                            style={[styles.termsLink, { color: colors.ink }]}
                             onPress={() => toast.info('Terms', 'KCIC terms of use will open here.')}>
                             Terms
                           </Text>
                           ,{' '}
                           <Text
-                            style={styles.termsLink}
+                            style={[styles.termsLink, { color: colors.ink }]}
                             onPress={() => toast.info('Privacy Policy', 'KCIC privacy policy will open here.')}>
                             Privacy Policy
                           </Text>
@@ -400,19 +425,22 @@ export default function AuthScreen() {
                       disabled={busy || (!isSignIn && !agreedToTerms)}
                       style={[
                         styles.primaryButton,
+                        { backgroundColor: !isSignIn && !agreedToTerms ? colors.accentDisabled : colors.accent },
                         !isSignIn && !agreedToTerms ? styles.primaryButtonDisabled : null,
                       ]}>
                       {busy ? (
-                        <ActivityIndicator color={palette.white} />
+                        <ActivityIndicator color={colors.primaryText} />
                       ) : (
-                        <Text style={styles.primaryText}>{isSignIn ? 'Sign in' : 'Create Account'}</Text>
+                        <Text style={[styles.primaryText, { color: colors.primaryText }]}>
+                          {isSignIn ? 'Sign in' : 'Create Account'}
+                        </Text>
                       )}
                     </Pressable>
 
                     <View style={styles.dividerRow}>
-                      <View style={styles.divider} />
-                      <Text style={styles.dividerText}>or Continue with</Text>
-                      <View style={styles.divider} />
+                      <View style={[styles.divider, { backgroundColor: colors.divider }]} />
+                      <Text style={[styles.dividerText, { color: colors.placeholder }]}>or Continue with</Text>
+                      <View style={[styles.divider, { backgroundColor: colors.divider }]} />
                     </View>
 
                     <View style={styles.providerRow}>
@@ -430,9 +458,9 @@ export default function AuthScreen() {
 
                     {step === 'form' ? (
                   <Pressable onPress={() => switchMode(isSignIn ? 'sign-up' : 'sign-in')} style={styles.footerPrompt}>
-                    <Text style={styles.footerPromptText}>
+                    <Text style={[styles.footerPromptText, { color: colors.muted }]}>
                       {isSignIn ? "Don't have an account? " : 'Already have an account? '}
-                      <Text style={styles.footerPromptAction}>
+                      <Text style={[styles.footerPromptAction, { color: colors.ink }]}>
                         {isSignIn ? 'Sign up →' : '→ Sign In'}
                       </Text>
                     </Text>
@@ -474,21 +502,17 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    backgroundColor: palette.white,
     alignItems: 'center',
     justifyContent: 'center',
   },
   navSpacer: { width: 44 },
   navAction: {
-    color: palette.ink,
     fontFamily: fonts.bold,
     fontSize: 15,
     fontWeight: '700',
   },
   hero: { marginBottom: 28 },
   title: {
-    color: palette.ink,
     fontFamily: fonts.extraBold,
     fontSize: 32,
     lineHeight: 38,
@@ -496,7 +520,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.4,
   },
   subtitle: {
-    color: palette.slate,
     fontFamily: fonts.regular,
     fontSize: 15,
     lineHeight: 22,
@@ -504,7 +527,6 @@ const styles = StyleSheet.create({
     maxWidth: 340,
   },
   emailValue: {
-    color: palette.ink,
     fontFamily: fonts.bold,
     fontSize: 15,
     fontWeight: '700',
@@ -512,7 +534,6 @@ const styles = StyleSheet.create({
   },
   form: { gap: 16 },
   formLabel: {
-    color: palette.ink,
     fontFamily: fonts.semibold,
     fontSize: 14,
     fontWeight: '600',
@@ -526,13 +547,11 @@ const styles = StyleSheet.create({
   },
   remember: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   helperText: {
-    color: palette.slate,
     fontFamily: fonts.medium,
     fontSize: 13,
     fontWeight: '500',
   },
   linkText: {
-    color: palette.ink,
     fontFamily: fonts.bold,
     fontSize: 13,
     fontWeight: '700',
@@ -545,31 +564,26 @@ const styles = StyleSheet.create({
   },
   termsText: {
     flex: 1,
-    color: palette.slate,
     fontFamily: fonts.medium,
     fontSize: 13,
     lineHeight: 20,
     fontWeight: '500',
   },
   termsLink: {
-    color: palette.ink,
     fontFamily: fonts.bold,
     fontWeight: '700',
   },
   primaryButton: {
     minHeight: 54,
     borderRadius: 27,
-    backgroundColor: palette.lime,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 4,
   },
   primaryButtonDisabled: {
-    backgroundColor: '#C5D4C8',
     opacity: 0.7,
   },
   primaryText: {
-    color: palette.white,
     fontFamily: fonts.bold,
     fontSize: 16,
     fontWeight: '700',
@@ -580,24 +594,15 @@ const styles = StyleSheet.create({
     gap: 12,
     marginVertical: 4,
   },
-  divider: { flex: 1, height: 1, backgroundColor: '#E5E7EB' },
+  divider: { flex: 1, height: 1 },
   dividerText: {
-    color: '#9AA3AF',
     fontFamily: fonts.medium,
     fontSize: 13,
     fontWeight: '500',
   },
   providerRow: { flexDirection: 'row', gap: 12 },
-  prototypeButton: { alignItems: 'center', paddingVertical: 4 },
-  prototypeText: {
-    color: palette.forest,
-    fontFamily: fonts.semibold,
-    fontSize: 13,
-    fontWeight: '600',
-  },
   inlineLink: { alignItems: 'center', paddingVertical: 2 },
   inlineLinkText: {
-    color: palette.slate,
     fontFamily: fonts.medium,
     fontSize: 13,
     fontWeight: '500',
@@ -605,20 +610,17 @@ const styles = StyleSheet.create({
   },
   footerLink: { alignItems: 'center', marginTop: 4 },
   footerLinkText: {
-    color: palette.forest,
     fontFamily: fonts.semibold,
     fontSize: 13,
     fontWeight: '600',
   },
   footerPrompt: { alignItems: 'center', marginTop: 28 },
   footerPromptText: {
-    color: palette.slate,
     fontFamily: fonts.regular,
     fontSize: 14,
     lineHeight: 20,
   },
   footerPromptAction: {
-    color: palette.ink,
     fontFamily: fonts.bold,
     fontWeight: '700',
   },

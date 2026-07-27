@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { ActivityIndicator, Keyboard, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { useAuthTheme } from '@/components/kcic/auth/auth-theme';
 import {
   AuthField,
   PasswordAuthField,
   VerificationCodeInput,
 } from '@/components/kcic/auth-ui';
-import { palette } from '@/components/kcic/ui';
 import { getAuthErrorToast } from '@/lib/auth-errors';
 import {
   requestPasswordResetCode,
@@ -46,6 +46,7 @@ export function PasswordRecoveryForm({
   onCancel,
   onComplete,
 }: PasswordRecoveryFormProps) {
+  const colors = useAuthTheme();
   const [step, setStep] = useState<RecoveryStep>('email');
   const [email, setEmail] = useState(initialEmail);
   const [otp, setOtp] = useState('');
@@ -143,9 +144,11 @@ export function PasswordRecoveryForm({
   return (
     <>
       <View style={styles.hero}>
-        <Text style={styles.title}>{copy.title}</Text>
-        <Text style={styles.subtitle}>{copy.subtitle}</Text>
-        {step !== 'email' ? <Text style={styles.emailValue}>{normalizedEmail}</Text> : null}
+        <Text style={[styles.title, { color: colors.ink }]}>{copy.title}</Text>
+        <Text style={[styles.subtitle, { color: colors.muted }]}>{copy.subtitle}</Text>
+        {step !== 'email' ? (
+          <Text style={[styles.emailValue, { color: colors.ink }]}>{normalizedEmail}</Text>
+        ) : null}
       </View>
 
       <View style={styles.form}>
@@ -164,24 +167,22 @@ export function PasswordRecoveryForm({
               returnKeyType="done"
               onSubmitEditing={Keyboard.dismiss}
             />
-            <RecoveryButton
-              label="Send reset code"
-              isBusy={isBusy}
-              onPress={handleRequestCode}
-            />
+            <RecoveryButton label="Send reset code" isBusy={isBusy} onPress={handleRequestCode} />
           </>
         ) : null}
 
         {step === 'otp' ? (
           <>
-            <Text style={styles.formLabel}>Enter password reset code</Text>
+            <Text style={[styles.formLabel, { color: colors.ink }]}>Enter password reset code</Text>
             <VerificationCodeInput value={otp} onChange={setOtp} />
             <Pressable
               accessibilityRole="button"
               disabled={isBusy}
               onPress={handleRequestCode}
               style={styles.inlineLink}>
-              <Text style={styles.inlineLinkText}>I didn&apos;t get a code</Text>
+              <Text style={[styles.inlineLinkText, { color: colors.muted }]}>
+                I didn&apos;t get a code
+              </Text>
             </Pressable>
             <RecoveryButton label="Confirm code" isBusy={isBusy} onPress={handleVerifyCode} />
           </>
@@ -221,7 +222,7 @@ export function PasswordRecoveryForm({
           disabled={isBusy}
           onPress={handleBack}
           style={styles.footerLink}>
-          <Text style={styles.footerLinkText}>
+          <Text style={[styles.footerLinkText, { color: colors.link }]}>
             {step === 'email' ? 'Back to sign in' : 'Go back'}
           </Text>
         </Pressable>
@@ -239,16 +240,22 @@ function RecoveryButton({
   isBusy: boolean;
   onPress: () => void;
 }) {
+  const colors = useAuthTheme();
+
   return (
     <Pressable
       accessibilityRole="button"
       disabled={isBusy}
       onPress={onPress}
-      style={[styles.primaryButton, isBusy ? styles.primaryButtonDisabled : null]}>
+      style={[
+        styles.primaryButton,
+        { backgroundColor: colors.accent },
+        isBusy ? styles.primaryButtonDisabled : null,
+      ]}>
       {isBusy ? (
-        <ActivityIndicator color={palette.white} />
+        <ActivityIndicator color={colors.primaryText} />
       ) : (
-        <Text style={styles.primaryText}>{label}</Text>
+        <Text style={[styles.primaryText, { color: colors.primaryText }]}>{label}</Text>
       )}
     </Pressable>
   );
@@ -257,7 +264,6 @@ function RecoveryButton({
 const styles = StyleSheet.create({
   hero: { marginBottom: 28 },
   title: {
-    color: palette.ink,
     fontFamily: fonts.extraBold,
     fontSize: 32,
     lineHeight: 38,
@@ -265,7 +271,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.4,
   },
   subtitle: {
-    color: palette.slate,
     fontFamily: fonts.regular,
     fontSize: 15,
     lineHeight: 22,
@@ -273,7 +278,6 @@ const styles = StyleSheet.create({
     maxWidth: 340,
   },
   emailValue: {
-    color: palette.ink,
     fontFamily: fonts.bold,
     fontSize: 15,
     fontWeight: '700',
@@ -281,7 +285,6 @@ const styles = StyleSheet.create({
   },
   form: { gap: 16 },
   formLabel: {
-    color: palette.ink,
     fontFamily: fonts.semibold,
     fontSize: 14,
     fontWeight: '600',
@@ -290,21 +293,18 @@ const styles = StyleSheet.create({
   primaryButton: {
     minHeight: 54,
     borderRadius: 27,
-    backgroundColor: palette.lime,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 4,
   },
   primaryButtonDisabled: { opacity: 0.7 },
   primaryText: {
-    color: palette.white,
     fontFamily: fonts.bold,
     fontSize: 16,
     fontWeight: '700',
   },
   inlineLink: { alignItems: 'center', paddingVertical: 2 },
   inlineLinkText: {
-    color: palette.slate,
     fontFamily: fonts.medium,
     fontSize: 13,
     fontWeight: '500',
@@ -312,7 +312,6 @@ const styles = StyleSheet.create({
   },
   footerLink: { alignItems: 'center', marginTop: 4 },
   footerLinkText: {
-    color: palette.forest,
     fontFamily: fonts.semibold,
     fontSize: 13,
     fontWeight: '600',
