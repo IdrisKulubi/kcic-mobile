@@ -1,10 +1,10 @@
-# KCIC Climate Hub Product Context
+# KCIC Insights Product Context
 
 ## Register
 product
 
 ## Product Purpose
-KCIC Climate Hub is a mobile-first communication channel for Kenya Climate Innovation Center. It gives climate-tech entrepreneurs, SME founders, innovators, investors, researchers, and ecosystem partners a polished way to discover KCIC insights, opportunities, events, and success stories.
+KCIC Insights is a mobile-first communication channel for Kenya Climate Innovation Center. It gives climate-tech entrepreneurs, SME founders, innovators, investors, researchers, and ecosystem partners a polished way to discover KCIC insights, opportunities, events, and success stories.
 
 ## Current Phase
 High-fidelity mobile prototype with dummy data. Database, authentication, analytics instrumentation, and the web admin interface are future implementation phases.

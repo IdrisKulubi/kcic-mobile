@@ -9,13 +9,13 @@ import type { OtpPurpose } from "@/src/lib/email/types"
 export function getOtpEmailSubject(purpose: OtpPurpose | string) {
   switch (purpose) {
     case "forget-password":
-      return "Reset your KCIC Climate Hub password"
+      return "Reset your KCIC Insights password"
     case "sign-in":
-      return "Your KCIC Climate Hub sign-in code"
+      return "Your KCIC Insights sign-in code"
     case "change-email":
       return "Confirm your new email address"
     case "two-factor":
-      return "Your KCIC Climate Hub security code"
+      return "Your KCIC Insights security code"
     default:
       return "Verify your email address"
   }
@@ -46,7 +46,7 @@ export async function sendWelcomeEmail(input: { to: string; name?: string | null
 
   await sendEmail({
     to: input.to,
-    subject: "Welcome to KCIC Climate Hub",
+    subject: "Welcome to KCIC Insights",
     html,
   })
 }
@@ -63,7 +63,7 @@ export async function sendPasswordResetEmail(input: {
 
   await sendEmail({
     to: input.to,
-    subject: "Reset your KCIC Climate Hub password",
+    subject: "Reset your KCIC Insights password",
     html,
   })
 }

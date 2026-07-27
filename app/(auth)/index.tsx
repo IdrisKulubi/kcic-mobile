@@ -173,7 +173,7 @@ export default function AuthScreen() {
       throwIfAuthError(signInResult);
       await waitForStoredAuth();
       await refreshSession();
-      toast.success('Email verified', 'Welcome to KCIC Climate Hub.');
+      toast.success('Email verified', 'Welcome to KCIC Insights.');
     } catch (err) {
       toast.show(getAuthErrorToast(err, mode === 'sign-up' ? 'sign-up' : 'sign-in'));
     } finally {
@@ -200,7 +200,7 @@ export default function AuthScreen() {
       throwIfAuthError(result);
       await waitForStoredAuth();
       await refreshSession();
-      toast.success('Signed in with Google', 'Welcome to KCIC Climate Hub.');
+      toast.success('Signed in with Google', 'Welcome to KCIC Insights.');
     } catch (err) {
       toast.show(getAuthErrorToast(err, 'google'));
     } finally {
@@ -232,7 +232,7 @@ export default function AuthScreen() {
       throwIfAuthError(result);
       await waitForStoredAuth();
       await refreshSession();
-      toast.success('Signed in with Apple', 'Welcome to KCIC Climate Hub.');
+      toast.success('Signed in with Apple', 'Welcome to KCIC Insights.');
     } catch (err) {
       const cancelCode = typeof err === 'object' && err && 'code' in err ? String((err as any).code) : '';
       if (cancelCode !== 'ERR_REQUEST_CANCELED') toast.show(getAuthErrorToast(err, 'apple'));
@@ -246,7 +246,7 @@ export default function AuthScreen() {
       ? 'Check your email'
       : isSignIn
         ? 'Welcome back!'
-        : 'Join KCIC Climate Hub';
+        : 'Join KCIC Insights';
 
   const heroSubtitle =
     step === 'verify'

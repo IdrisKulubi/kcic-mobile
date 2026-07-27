@@ -15,15 +15,15 @@ function getPurposeCopy(purpose: OtpPurpose | string) {
   switch (purpose) {
     case "forget-password":
       return {
-        preview: "Reset your KCIC Climate Hub password",
+        preview: "Reset your KCIC Insights password",
         heading: "Your reset code",
-        body: "Use the code below to reset your KCIC Climate Hub password.",
+        body: "Use the code below to reset your KCIC Insights password.",
       }
     case "sign-in":
       return {
-        preview: "Your KCIC Climate Hub sign-in code",
+        preview: "Your KCIC Insights sign-in code",
         heading: "Your sign-in code",
-        body: "Use the code below to finish signing in to KCIC Climate Hub.",
+        body: "Use the code below to finish signing in to KCIC Insights.",
       }
     case "change-email":
       return {
@@ -33,15 +33,15 @@ function getPurposeCopy(purpose: OtpPurpose | string) {
       }
     case "two-factor":
       return {
-        preview: "Your KCIC Climate Hub security code",
+        preview: "Your KCIC Insights security code",
         heading: "Security code",
         body: "Use the code below to complete your security check.",
       }
     default:
       return {
-        preview: "Verify your KCIC Climate Hub email",
+        preview: "Verify your KCIC Insights email",
         heading: "Verify your email",
-        body: "Use the code below to verify your KCIC Climate Hub account.",
+        body: "Use the code below to verify your KCIC Insights account.",
       }
   }
 }

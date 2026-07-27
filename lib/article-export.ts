@@ -69,7 +69,7 @@ export function buildArticlePrintHtml(article: NewsArticle) {
     </style>
   </head>
   <body>
-    <div class="brand">KCIC Climate Hub</div>
+    <div class="brand">KCIC Insights</div>
     <h1>${escapeHtml(article.title)}</h1>
     <div class="meta">${escapeHtml(meta)}</div>
     <p class="excerpt">${escapeHtml(article.excerpt)}</p>

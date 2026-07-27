@@ -119,7 +119,7 @@ export const kcicBoxedTailwindConfig: TailwindConfig = {
 }
 
 export const brandAssets = {
-  companyName: "KCIC Climate Hub",
+  companyName: "KCIC Insights",
   tagline: "Climate innovation. Enterprise. Impact.",
   address: ["Kenya Climate Innovation Center", "Nairobi, Kenya"],
   social: {

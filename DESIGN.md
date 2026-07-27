@@ -1,4 +1,4 @@
-# KCIC Climate Hub Design System
+# KCIC Insights Design System
 
 ## Brand Colors (canonical)
 

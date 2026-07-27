@@ -29,7 +29,7 @@ interface PasswordRecoveryFormProps {
 const recoveryCopy = {
   email: {
     title: 'Reset your password',
-    subtitle: 'Enter the email address linked to your KCIC Climate Hub account.',
+    subtitle: 'Enter the email address linked to your KCIC Insights account.',
   },
   otp: {
     title: 'Check your email',

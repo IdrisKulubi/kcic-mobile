@@ -11,11 +11,11 @@ export function WelcomeEmail({ name }: WelcomeEmailProps) {
 
   return (
     <KcicEmailLayout
-      preview="Welcome to KCIC Climate Hub"
+      preview="Welcome to KCIC Insights"
       heading="Welcome to KCIC"
       showUnsubscribe>
       <Text className="font-16 text-fg m-0 max-w-[480px] font-sans">
-        {greeting} your KCIC Climate Hub account is ready. Sign in on the app to explore
+        {greeting} your KCIC Insights account is ready. Sign in on the app to explore
         climate innovation resources and connect with the ecosystem.
       </Text>
     </KcicEmailLayout>

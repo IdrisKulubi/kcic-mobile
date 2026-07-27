@@ -116,7 +116,7 @@ export function KcicEmailLayout({
 
               {showUnsubscribe ? (
                 <Text className="font-13 text-fg-2 m-0 mt-5 font-sans">
-                  You received this because you created a KCIC Climate Hub account.
+                  You received this because you created a KCIC Insights account.
                 </Text>
               ) : null}
             </Section>

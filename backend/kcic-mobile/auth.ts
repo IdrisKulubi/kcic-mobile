@@ -173,7 +173,7 @@ export const auth = betterAuth({
       },
     }),
     twoFactor({
-      issuer: "KCIC Climate Hub",
+      issuer: "KCIC Insights",
       otpOptions: {
         async sendOTP({
           user,

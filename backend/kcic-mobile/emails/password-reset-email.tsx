@@ -10,12 +10,12 @@ export interface PasswordResetEmailProps {
 export function PasswordResetEmail({ url }: PasswordResetEmailProps) {
   return (
     <KcicEmailLayout
-      preview="Reset your KCIC Climate Hub password"
+      preview="Reset your KCIC Insights password"
       heading="Reset your password"
       action={{ label: "Change password", href: url }}
       securityNote="If you didn't request this, please ignore this email. Your password won't change until you access the link above and create a new one.">
       <Text className="font-16 text-fg m-0 max-w-[480px] font-sans">
-        Someone requested a password reset for your KCIC Climate Hub account. Use the button
+        Someone requested a password reset for your KCIC Insights account. Use the button
         below to choose a new password.
       </Text>
     </KcicEmailLayout>
