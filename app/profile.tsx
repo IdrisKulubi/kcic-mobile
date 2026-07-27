@@ -1,317 +1,320 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-
-import { showAddTopic, showEditProfile, showOpenResource } from '@/components/kcic/feedback';
+import { StatusBar } from 'expo-status-bar';
+import { useCallback, useMemo, useState } from 'react';
 import {
-  AppScreen,
-  Card,
-  Pill,
-  PrimaryButton,
-  profileAvatar,
-  SectionTitle,
-  palette,
-} from '@/components/kcic/ui';
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  useColorScheme,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import {
+  EditProfileSheet,
+  type ProfileFormValues,
+} from '@/components/kcic/profile/edit-profile-sheet';
+import { ProfileEventsSection } from '@/components/kcic/profile/profile-events-section';
+import { ProfileHeroCard } from '@/components/kcic/profile/profile-hero-card';
+import { ProfileSavedPreview } from '@/components/kcic/profile/profile-saved-preview';
+import { ProfileSection } from '@/components/kcic/profile/profile-section';
+import { ProfileSettingsRow } from '@/components/kcic/profile/profile-settings-row';
+import { profileThemes } from '@/components/kcic/profile/profile-theme';
 import { useAuth } from '@/context/auth-context';
 import { useBookmarks } from '@/context/bookmarks-context';
+import { useContent } from '@/context/content-context';
+import { useMedia } from '@/context/media-context';
+import { useMediaPlayer } from '@/context/media-player-context';
 import { usePrototype } from '@/context/prototype-context';
-import { bookmarkKey, events, savedResources } from '@/data/kcic';
+import { events } from '@/data/kcic';
+import { hapticLight } from '@/lib/haptics';
 import { openContent, openSettings } from '@/lib/navigation';
+import { openSavedItem } from '@/lib/open-saved-item';
+import { updateProfile } from '@/lib/profile-api';
+import { resolveSavedItems } from '@/lib/resolve-saved-items';
+import { toast } from '@/lib/toast';
+import { fonts } from '@/lib/typography';
 
-const SETTING_SLUGS: Record<string, string> = {
-  'Notification Preferences': 'notification-preferences',
-  'Language & Region': 'language-region',
-  'Security Settings': 'security-settings',
-};
+const SETTING_SLUGS = {
+  notifications: 'notification-preferences',
+  security: 'security-settings',
+  language: 'language-region',
+} as const;
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, signOut } = useAuth();
-  const { interests, removeInterest, addInterest } = usePrototype();
-  const { toggleBookmark, isBookmarked } = useBookmarks();
+  const isDark = useColorScheme() === 'dark';
+  const colors = isDark ? profileThemes.dark : profileThemes.light;
+  const { status, user, token, signOut, updateUser } = useAuth();
+  const { bookmarks } = useBookmarks();
+  const { articles, programmes, opportunities } = useContent();
+  const { getItemById } = useMedia();
+  const { play } = useMediaPlayer();
+  const { rsvpEvents } = usePrototype();
+  const [editVisible, setEditVisible] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const profileEvent = events[1];
+  const savedItems = useMemo(
+    () =>
+      resolveSavedItems({
+        bookmarks,
+        articles,
+        programmes,
+        opportunities,
+        getItemById,
+      }),
+    [articles, bookmarks, getItemById, opportunities, programmes]
+  );
+
+  const savedPreview = useMemo(() => savedItems.slice(0, 3), [savedItems]);
+
+  const registeredEvents = useMemo(
+    () => events.filter((event) => rsvpEvents.has(event.id)),
+    [rsvpEvents]
+  );
+
+  const handleClose = () => {
+    hapticLight();
+    router.back();
+  };
+
+  const handleSaveProfile = useCallback(
+    async (values: ProfileFormValues) => {
+      if (!user) return;
+
+      setSaving(true);
+      try {
+        const payload = {
+          name: values.name,
+          organization: values.organization || null,
+          location: values.location || null,
+          interests: values.interests,
+        };
+
+        if (token === 'prototype-local-session-token') {
+          await updateUser({ ...user, ...payload });
+          toast.success('Profile updated', 'Your details were saved for this session.');
+          setEditVisible(false);
+          return;
+        }
+
+        const updated = await updateProfile(payload);
+        await updateUser(updated);
+        toast.success('Profile updated', 'Your account details have been saved.');
+        setEditVisible(false);
+      } catch {
+        toast.error('Could not save profile', 'Please check your connection and try again.');
+      } finally {
+        setSaving(false);
+      }
+    },
+    [token, updateUser, user]
+  );
+
+  if (status === 'loading') {
+    return (
+      <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
+        <View style={styles.loadingWrap}>
+          <ActivityIndicator size="large" color={colors.accentGreen} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!user) {
+    return (
+      <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
+        <View style={styles.loadingWrap}>
+          <Text style={[styles.loadingText, { color: colors.muted }]}>Sign in to view your profile.</Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.replace('/(auth)' as never)}
+            style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}>
+            <Text style={[styles.signInLink, { color: colors.accentGreen }]}>Go to sign in</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
-    <AppScreen padded={false}>
-      <View style={styles.screen}>
-        <View style={styles.profileHeader}>
-          <Pressable onPress={showEditProfile}>
-            <Image source={profileAvatar} style={styles.profileImage} contentFit="cover" />
-            <View style={styles.editBadge}>
-              <MaterialIcons name="edit" size={16} color={palette.limeDark} />
-            </View>
-          </Pressable>
-          <Text style={styles.name}>{user?.name ?? 'KCIC Member'}</Text>
-          <Text style={styles.role}>
-            {user?.role ?? 'Climate Innovation Member'}
-            {user?.organization ? `, ${user.organization}` : ''}
-          </Text>
-          <View style={styles.badgeRow}>
-            <View style={styles.infoBadge}>
-              <MaterialIcons name="location-on" size={13} color={palette.slate} />
-              <Text style={styles.infoBadgeText}>{user?.location ?? 'Nairobi, Kenya'}</Text>
-            </View>
-            <View style={styles.infoBadge}>
-              <MaterialIcons name="calendar-today" size={13} color={palette.slate} />
-              <Text style={styles.infoBadgeText}>
-                {user?.createdAt ? `Joined ${new Date(user.createdAt).getFullYear()}` : 'Prototype session'}
-              </Text>
-            </View>
-          </View>
-          <PrimaryButton label="Edit Profile" onPress={showEditProfile} />
-        </View>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
-        <Card style={styles.section}>
-          <SectionTitle title="My Interests" icon="edit" />
-          <View style={styles.topicWrap}>
-            {interests.map((topic) => (
-              <Pill key={topic} label={topic} onPress={() => removeInterest(topic)} />
-            ))}
-            <Pill label="+ Add Topic" tone="blue" onPress={() => showAddTopic(addInterest)} />
-          </View>
-        </Card>
-
-        <Card style={styles.section}>
-          <SectionTitle
-            title="Saved Resources"
-            action="View All"
-            onPressAction={() => router.push('/saved')}
-          />
-          {savedResources.map((resource) => {
-            const bKey = bookmarkKey('resource', resource.id);
-            const saved = isBookmarked(bKey);
-
-            return (
-              <Pressable
-                key={resource.id}
-                style={styles.resourceRow}
-                onPress={() => showOpenResource(resource.title, resource.detail)}>
-                <View style={styles.resourceIcon}>
-                  <MaterialIcons
-                    name={resource.icon as keyof typeof MaterialIcons.glyphMap}
-                    size={24}
-                    color={palette.blue}
-                  />
-                </View>
-                <View style={styles.resourceText}>
-                  <Text style={styles.resourceTitle}>{resource.title}</Text>
-                  <Text style={styles.resourceDetail}>{resource.detail}</Text>
-                </View>
-                <Pressable onPress={() => toggleBookmark(bKey)} hitSlop={8}>
-                  <MaterialIcons
-                    name={saved ? 'bookmark' : 'bookmark-border'}
-                    size={22}
-                    color={palette.forest}
-                  />
-                </Pressable>
-              </Pressable>
-            );
-          })}
-        </Card>
-
-        <Card style={styles.section}>
-          <SectionTitle title="My Events" />
-          <View style={styles.upcomingBox}>
-            <Text style={styles.upcomingLabel}>Upcoming</Text>
-            <Text style={styles.upcomingTitle}>{profileEvent.title}</Text>
-            <Text style={styles.resourceDetail}>
-              {profileEvent.date}, {profileEvent.time}
-            </Text>
-            <PrimaryButton
-              label="View Details"
-              variant="outline"
-              onPress={() => openContent('event', profileEvent.id)}
-            />
-          </View>
-        </Card>
-
-        <Card style={styles.section}>
-          <Text style={styles.settingsTitle}>Preferences & Settings</Text>
-          <Text style={styles.settingsIntro}>Manage your account configurations and notifications.</Text>
-          {[
-            ['notifications-none', 'Notification Preferences', 'Manage email and push alerts'],
-            ['language', 'Language & Region', 'English (UK), East Africa Time'],
-            ['lock-outline', 'Security Settings', 'Password, 2FA, connected accounts'],
-          ].map(([icon, title, detail]) => (
-            <Pressable
-              key={title}
-              style={styles.settingRow}
-              onPress={() => openSettings(SETTING_SLUGS[title])}>
-              <View style={styles.settingIcon}>
-                <MaterialIcons name={icon as keyof typeof MaterialIcons.glyphMap} size={22} color={palette.slate} />
-              </View>
-              <View style={styles.resourceText}>
-                <Text style={styles.resourceTitle}>{title}</Text>
-                <Text style={styles.resourceDetail}>{detail}</Text>
-              </View>
-              <MaterialIcons name="chevron-right" size={24} color="#A3B0A0" />
-            </Pressable>
-          ))}
-          <Pressable style={styles.signOutRow} onPress={signOut}>
-            <MaterialIcons name="logout" size={22} color={palette.danger} />
-            <View style={styles.resourceText}>
-              <Text style={styles.signOutTitle}>Sign Out</Text>
-              <Text style={styles.resourceDetail}>Clear this device session</Text>
-            </View>
-          </Pressable>
-        </Card>
+      <View style={styles.header}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+          hitSlop={8}
+          onPress={handleClose}
+          style={({ pressed }) => [
+            styles.headerButton,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+              opacity: pressed ? 0.76 : 1,
+            },
+          ]}>
+          <MaterialIcons name="arrow-back" size={20} color={colors.ink} />
+        </Pressable>
+        <Text style={[styles.headerTitle, { color: colors.ink }]}>Profile</Text>
+        <View style={styles.headerSpacer} />
       </View>
-    </AppScreen>
+
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}>
+        <ProfileHeroCard
+          user={user}
+          colors={colors}
+          onEditPress={() => {
+            hapticLight();
+            setEditVisible(true);
+          }}
+        />
+
+        <ProfileSection
+          title="Saved"
+          action={savedItems.length > 0 ? 'View all' : undefined}
+          onAction={
+            savedItems.length > 0
+              ? () => {
+                  hapticLight();
+                  router.push('/(tabs)/saved' as never);
+                }
+              : undefined
+          }
+          colors={colors}>
+          <ProfileSavedPreview
+            items={savedPreview}
+            colors={colors}
+            onItemPress={(item) =>
+              openSavedItem(item, {
+                getMediaItem: getItemById,
+                playMedia: play,
+              })
+            }
+            onBrowsePress={() => router.push('/(tabs)/explore' as never)}
+          />
+        </ProfileSection>
+
+        <ProfileSection title="Registered Events" colors={colors}>
+          <ProfileEventsSection
+            events={registeredEvents}
+            colors={colors}
+            onEventPress={(eventId) => {
+              hapticLight();
+              openContent('event', eventId);
+            }}
+            onBrowsePress={() => router.push('/(tabs)/events' as never)}
+          />
+        </ProfileSection>
+
+        <ProfileSection title="Account" colors={colors}>
+          <ProfileSettingsRow
+            icon="notifications-none"
+            title="Notification Preferences"
+            subtitle="Email, push, events, and podcast alerts"
+            colors={colors}
+            isFirst
+            onPress={() => {
+              hapticLight();
+              openSettings(SETTING_SLUGS.notifications);
+            }}
+          />
+          <ProfileSettingsRow
+            icon="lock-outline"
+            title="Security Settings"
+            subtitle="Password, 2FA, and connected accounts"
+            colors={colors}
+            onPress={() => {
+              hapticLight();
+              openSettings(SETTING_SLUGS.security);
+            }}
+          />
+          <ProfileSettingsRow
+            icon="language"
+            title="Language & Region"
+            subtitle="English (UK), East Africa Time"
+            colors={colors}
+            onPress={() => {
+              hapticLight();
+              openSettings(SETTING_SLUGS.language);
+            }}
+          />
+          <ProfileSettingsRow
+            icon="logout"
+            title="Sign Out"
+            subtitle="Clear this device session"
+            colors={colors}
+            destructive
+            showChevron={false}
+            onPress={() => {
+              hapticLight();
+              signOut();
+            }}
+          />
+        </ProfileSection>
+      </ScrollView>
+
+      <EditProfileSheet
+        visible={editVisible}
+        user={user}
+        saving={saving}
+        onClose={() => setEditVisible(false)}
+        onSave={handleSaveProfile}
+      />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    paddingHorizontal: 18,
-  },
-  profileHeader: {
-    marginBottom: 26,
-  },
-  profileImage: {
-    width: 98,
-    height: 98,
-    borderRadius: 49,
-    borderWidth: 4,
-    borderColor: palette.white,
-  },
-  editBadge: {
-    position: 'absolute',
-    right: 2,
-    bottom: 6,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: palette.white,
-  },
-  name: {
-    color: palette.ink,
-    fontSize: 40,
-    lineHeight: 44,
-    fontWeight: '900',
-    marginTop: 28,
-  },
-  role: {
-    color: palette.slate,
-    fontSize: 16,
-    lineHeight: 22,
-    marginTop: 8,
-    marginBottom: 12,
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 24,
-  },
-  infoBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#E8EEF9',
-    borderRadius: 10,
-    paddingHorizontal: 9,
-    paddingVertical: 5,
-  },
-  infoBadgeText: {
-    color: palette.slate,
-    fontSize: 11,
-    fontWeight: '800',
-  },
-  section: {
-    marginBottom: 22,
-  },
-  topicWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  resourceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    paddingVertical: 12,
-  },
-  resourceIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#EDF8FC',
-  },
-  resourceText: {
+  safe: {
     flex: 1,
   },
-  resourceTitle: {
-    color: palette.ink,
-    fontSize: 14,
-    fontWeight: '900',
-  },
-  resourceDetail: {
-    color: palette.slate,
-    fontSize: 12,
-    lineHeight: 18,
-    marginTop: 2,
-  },
-  upcomingBox: {
-    gap: 9,
-    borderRadius: 12,
-    backgroundColor: palette.panel,
-    padding: 16,
-  },
-  upcomingLabel: {
-    color: palette.limeDark,
-    fontSize: 12,
-    fontWeight: '900',
-  },
-  upcomingTitle: {
-    color: palette.ink,
-    fontSize: 15,
-    fontWeight: '900',
-  },
-  settingsTitle: {
-    color: palette.ink,
-    fontSize: 24,
-    fontWeight: '900',
-  },
-  settingsIntro: {
-    color: palette.slate,
-    fontSize: 14,
-    lineHeight: 21,
-    marginTop: 6,
-    marginBottom: 12,
-  },
-  settingRow: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    paddingVertical: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#EEF2EC',
+    justifyContent: 'space-between',
+    paddingHorizontal: 18,
+    paddingBottom: 8,
   },
-  settingIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+  headerButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F3F6FF',
   },
-  signOutRow: {
-    flexDirection: 'row',
+  headerTitle: {
+    fontFamily: fonts.bold,
+    fontSize: 17,
+  },
+  headerSpacer: {
+    width: 40,
+  },
+  content: {
+    paddingHorizontal: 18,
+    paddingBottom: 32,
+  },
+  loadingWrap: {
+    flex: 1,
     alignItems: 'center',
-    gap: 14,
-    paddingVertical: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#EEF2EC',
+    justifyContent: 'center',
+    gap: 12,
+    paddingHorizontal: 24,
   },
-  signOutTitle: {
-    color: palette.danger,
+  loadingText: {
+    fontFamily: fonts.medium,
+    fontSize: 15,
+    textAlign: 'center',
+  },
+  signInLink: {
+    fontFamily: fonts.semibold,
     fontSize: 14,
-    fontWeight: '900',
   },
 });

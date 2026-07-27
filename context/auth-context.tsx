@@ -13,6 +13,7 @@ type AuthContextValue = {
   user: AuthUser | null;
   token: string | null;
   refreshSession: () => Promise<void>;
+  updateUser: (user: AuthUser) => Promise<void>;
   signOut: () => Promise<void>;
   signInPrototype: () => Promise<void>;
   setAuthenticatedSession: (input: { token: string; user: AuthUser }) => Promise<void>;
@@ -27,6 +28,7 @@ const DEMO_USER: AuthUser = {
   role: 'Climate Innovation Member',
   organization: 'Kenya Climate Innovation Center',
   location: 'Nairobi, Kenya',
+  interests: ['Climate Finance', 'AgriTech'],
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -39,8 +41,18 @@ function isProtectedSegment(segment?: string) {
     segment === 'notifications' ||
     segment === 'ask' ||
     segment === 'content' ||
+    segment === 'profile' ||
     segment === 'settings'
   );
+}
+
+async function persistUserSnapshot(user: AuthUser) {
+  const stored = await getStoredAuth();
+  if (!stored?.token) return;
+
+  if (stored.source === 'custom-session' || stored.source === 'better-auth-session-data') {
+    await saveCustomSession({ token: stored.token, user });
+  }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -67,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const profile = await apiFetch<{ user: AuthUser }>('/api/user/me');
       if (profile.user) {
         setUser(profile.user);
+        await persistUserSnapshot(profile.user);
       }
     } catch {
       // Network failures keep the local session; explicit invalid-session responses clear it in apiFetch.
@@ -124,6 +137,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, [setAuthenticatedSession]);
 
+  const updateUser = useCallback(async (nextUser: AuthUser) => {
+    setUser(nextUser);
+    await persistUserSnapshot(nextUser);
+  }, []);
+
   const signOut = useCallback(async () => {
     await clearSession();
     setToken(null);
@@ -139,11 +157,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       token,
       refreshSession,
+      updateUser,
       signOut,
       signInPrototype,
       setAuthenticatedSession,
     }),
-    [refreshSession, setAuthenticatedSession, signInPrototype, signOut, status, token, user]
+    [refreshSession, setAuthenticatedSession, signInPrototype, signOut, status, token, updateUser, user]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -19,7 +19,6 @@ import {
 import { GlobalAppHeader } from '@/components/kcic/global-app-header';
 import { palette } from '@/components/kcic/ui';
 import { GlobalHeaderProvider } from '@/context/global-header-context';
-import { MediaPlayerProvider } from '@/context/media-player-context';
 import { TAB_BAR_FLOAT_OFFSET } from '@/lib/tab-bar-layout';
 
 const TAB_ITEMS: (GlassTabItem & { href: string })[] = [
@@ -65,7 +64,6 @@ export default function TabLayout() {
   return (
     <TabBarMinimizeProvider>
       <GlobalHeaderProvider>
-        <MediaPlayerProvider>
           <View style={{ flex: 1, backgroundColor: isDark ? '#151617' : palette.shell }}>
           <Tabs>
             <TabSlot style={{ height: '100%' }} />
@@ -85,7 +83,6 @@ export default function TabLayout() {
           </Tabs>
           <GlobalAppHeader />
         </View>
-        </MediaPlayerProvider>
       </GlobalHeaderProvider>
     </TabBarMinimizeProvider>
   );

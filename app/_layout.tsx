@@ -1,8 +1,9 @@
 import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as WebBrowser from 'expo-web-browser';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
@@ -12,6 +13,7 @@ import { AuthProvider } from '@/context/auth-context';
 import { BookmarksProvider } from '@/context/bookmarks-context';
 import { ContentProvider } from '@/context/content-context';
 import { MediaProvider } from '@/context/media-context';
+import { MediaPlayerProvider } from '@/context/media-player-context';
 import { PrototypeProvider, usePrototype } from '@/context/prototype-context';
 import { defaultStackScreenOptions, modalStackScreenOptions } from '@/lib/stack-options';
 
@@ -48,11 +50,11 @@ function RootNavigation() {
           }}
         />
         <Stack.Screen name="library" options={{ title: 'Library', headerShown: true }} />
-        <Stack.Screen name="profile" options={{ title: 'Profile', headerShown: true }} />
+        <Stack.Screen name="profile" options={{ headerShown: false }} />
         <Stack.Screen name="content/[type]/[id]" options={{ title: 'Insight', headerShown: true }} />
         <Stack.Screen
           name="settings/[slug]"
-          options={{ ...modalStackScreenOptions, presentation: 'modal', title: 'Settings', headerShown: true }}
+          options={{ ...modalStackScreenOptions, presentation: 'modal', headerShown: false }}
         />
       </Stack>
       <StatusBar style="dark" />
@@ -62,6 +64,10 @@ function RootNavigation() {
 }
 
 export default function RootLayout() {
+  useEffect(() => {
+    SplashScreen.preventAutoHideAsync().catch(() => undefined);
+  }, []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <PrototypeProvider>
@@ -70,7 +76,9 @@ export default function RootLayout() {
             <BookmarksProvider>
               <ContentProvider>
                 <MediaProvider>
-                  <RootNavigation />
+                  <MediaPlayerProvider>
+                    <RootNavigation />
+                  </MediaPlayerProvider>
                 </MediaProvider>
               </ContentProvider>
             </BookmarksProvider>

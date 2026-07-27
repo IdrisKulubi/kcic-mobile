@@ -12,6 +12,8 @@ export type AuthUser = {
   role?: string | null;
   organization?: string | null;
   location?: string | null;
+  interests?: string[];
+  twoFactorEnabled?: boolean;
   createdAt?: string;
   updatedAt?: string;
 };

@@ -39,13 +39,14 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 220,
           "resizeMode": "contain",
-          "backgroundColor": "#F6F8FF",
+          "backgroundColor": "#F5F5F6",
           "dark": {
-            "backgroundColor": "#F6F8FF"
+            "backgroundColor": "#F5F5F6"
           }
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true,
